@@ -236,6 +236,16 @@
     font-style: italic;
   }
 
+  .track-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; }
+  .track-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 9px; background: var(--bg2);
+    border-radius: 5px; cursor: pointer;
+  }
+  .track-item input[type=checkbox] { accent-color: var(--accent); flex-shrink: 0; width: 15px; height: 15px; }
+  .track-item-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-item-artist { font-size: 11px; color: var(--accent); }
+
   .btn {
     display: inline-flex;
     align-items: center;
@@ -574,8 +584,7 @@
   <div class="preview-card" id="previewCard">
     <img id="previewImg" class="preview-img" />
     <div class="analysis-result" id="analysisResult">
-      <div class="result-track" id="resultTrack"></div>
-      <div class="result-artist" id="resultArtist"></div>
+      <div id="trackListContainer"></div>
       <div class="result-note" id="resultNote"></div>
     </div>
     <button class="btn btn-primary" id="btnAnalyze">
@@ -634,7 +643,7 @@
 
   let tracks = [];
   let currentFilter = "all";
-  let pendingTrack = null;
+  let pendingTracks = null;
   let currentImageBase64 = null;
 
   const $ = id => document.getElementById(id);
@@ -764,7 +773,7 @@
       $("analysisResult").classList.remove("visible");
       $("actionsRow").style.display = "none";
       $("btnAnalyzeText").textContent = "Analyser avec Claude Vision";
-      pendingTrack = null;
+      pendingTracks = null;
     };
     reader.readAsDataURL(file);
   });
@@ -785,7 +794,7 @@
       $("previewCard").classList.add("visible");
       $("analysisResult").classList.remove("visible");
       $("actionsRow").style.display = "none";
-      pendingTrack = null;
+      pendingTracks = null;
     };
     reader.readAsDataURL(file);
   });
@@ -809,7 +818,7 @@
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 500,
+          max_tokens: 1000,
           messages: [{
             role: "user",
             content: [
@@ -819,10 +828,11 @@
               },
               {
                 type: "text",
-                text: `Analyse ce screenshot YouTube et extrais le titre et l'artiste de la musique visible.
+                text: `Analyse ce screenshot (YouTube, Shazam, liste de lecture, ou autre source musicale) et extrais TOUS les titres et artistes visibles.
 Réponds UNIQUEMENT en JSON valide, sans backticks ni markdown, exactement ce format :
-{"title":"Titre de la chanson","artist":"Nom de l'artiste","note":"courte note si plusieurs titres visibles ou incertitude"}
-Si tu ne trouves aucune musique, réponds : {"title":"","artist":"","note":"Aucune musique détectée"}`
+{"tracks":[{"title":"Titre","artist":"Artiste"}],"note":"note optionnelle"}
+Si plusieurs morceaux sont visibles, liste-les tous dans le tableau tracks.
+Si tu ne trouves aucune musique, réponds : {"tracks":[],"note":"Aucune musique détectée"}`
               }
             ]
           }]
@@ -840,16 +850,24 @@ Si tu ne trouves aucune musique, réponds : {"title":"","artist":"","note":"Aucu
         throw new Error("Réponse Claude invalide : " + rawText);
       }
 
-      if (!parsed.title) {
+      const tracklist = parsed.tracks || [];
+      if (!tracklist.length) {
         showToast("Aucune musique détectée dans l'image", "error");
         setLoading(false);
         $("btnAnalyze").disabled = false;
         return;
       }
 
-      pendingTrack = { title: parsed.title, artist: parsed.artist };
-      $("resultTrack").textContent = parsed.title;
-      $("resultArtist").textContent = parsed.artist || "Artiste inconnu";
+      const container = $("trackListContainer");
+      if (tracklist.length === 1) {
+        container.innerHTML = `<div class="result-track">${tracklist[0].title}</div><div class="result-artist">${tracklist[0].artist || "Artiste inconnu"}</div>`;
+        $("btnSave").textContent = "Ajouter à la liste";
+      } else {
+        container.innerHTML = `<div class="track-list">${tracklist.map((t, i) => `<label class="track-item"><input type="checkbox" class="track-cb" data-i="${i}" checked /><div class="track-item-info"><div class="track-item-title">${t.title}</div><div class="track-item-artist">${t.artist || "Artiste inconnu"}</div></div></label>`).join("")}</div>`;
+        $("btnSave").textContent = `Ajouter tout (${tracklist.length})`;
+      }
+
+      pendingTracks = tracklist;
       $("resultNote").textContent = parsed.note || "";
       $("analysisResult").classList.add("visible");
       $("actionsRow").style.display = "flex";
@@ -864,12 +882,18 @@ Si tu ne trouves aucune musique, réponds : {"title":"","artist":"","note":"Aucu
   });
 
   $("btnSave").addEventListener("click", async () => {
-    if (!pendingTrack) return;
-    await addTrack(pendingTrack.title, pendingTrack.artist, "vision");
+    if (!pendingTracks?.length) return;
+    const checkboxes = document.querySelectorAll(".track-cb");
+    const toSave = checkboxes.length
+      ? pendingTracks.filter((_, i) => checkboxes[i]?.checked)
+      : pendingTracks;
+    for (const t of toSave) {
+      await addTrack(t.title, t.artist || "", "vision");
+    }
     $("previewCard").classList.remove("visible");
     $("fileInput").value = "";
     currentImageBase64 = null;
-    pendingTrack = null;
+    pendingTracks = null;
   });
 
   $("btnCancel").addEventListener("click", () => {
