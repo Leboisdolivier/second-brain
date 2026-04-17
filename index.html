@@ -358,6 +358,18 @@
 
   .track-list { display: flex; flex-direction: column; gap: 6px; }
 
+  .edit-input {
+    background: var(--bg3); border: 0.5px solid var(--accent);
+    border-radius: 4px; color: var(--text1); padding: 2px 6px;
+    font-family: inherit; font-size: inherit; width: 100%;
+    outline: none;
+  }
+  .edit-input-artist { font-size: 11px; color: var(--accent); margin-top: 2px; }
+  .queue-badge {
+    font-size: 11px; color: var(--text3); text-align: center;
+    padding: 4px 0 0; font-family: var(--font-mono);
+  }
+
   .track-item {
     background: var(--bg2);
     border: 0.5px solid var(--border);
@@ -570,18 +582,19 @@
   </div>
 
   <div class="upload-zone" id="uploadZone">
-    <input type="file" id="fileInput" accept="image/*" />
+    <input type="file" id="fileInput" accept="image/*" multiple />
     <div class="upload-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
         <polyline points="21 15 16 10 5 21"/>
       </svg>
     </div>
-    <p>Dépose ton screenshot YouTube ici</p>
-    <small>ou clique pour choisir une image</small>
+    <p>Dépose tes screenshots ici</p>
+    <small>ou clique pour choisir une ou plusieurs images</small>
   </div>
 
   <div class="preview-card" id="previewCard">
+    <div class="queue-badge" id="queueBadge" style="display:none"></div>
     <img id="previewImg" class="preview-img" />
     <div class="analysis-result" id="analysisResult">
       <div id="trackListContainer"></div>
@@ -645,6 +658,8 @@
   let currentFilter = "all";
   let pendingTracks = null;
   let currentImageBase64 = null;
+  let imageQueue = [];
+  let queueIndex = 0;
 
   const $ = id => document.getElementById(id);
 
@@ -700,11 +715,14 @@
       el.innerHTML = `
         <div class="track-num">${idx + 1}</div>
         <div class="track-info">
-          <div class="track-name">${track.title}${track.source === "vision" ? '<span class="tag">IA</span>' : ""}</div>
+          <div class="track-name"><span class="track-name-text">${track.title}</span>${track.source === "vision" ? '<span class="tag">IA</span>' : ""}</div>
           <div class="track-artist">${track.artist || "—"}</div>
         </div>
         <div class="track-date">${formatDate(track.createdAt)}</div>
         <div class="track-actions">
+          <button class="icon-btn edit-btn" title="Modifier" onclick="editTrack('${track.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
           <button class="icon-btn ${track.downloaded ? "done" : ""}" title="${track.downloaded ? "Marquer non téléchargé" : "Marquer téléchargé"}" onclick="toggleDone('${track.id}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           </button>
@@ -750,6 +768,36 @@
     } catch (e) { showToast("Erreur : " + e.message, "error"); }
   };
 
+  window.editTrack = (id) => {
+    const el = document.querySelector(`.track-item[data-id="${id}"]`);
+    if (!el) return;
+    const track = tracks.find(t => t.id === id);
+    if (!track) return;
+    const nameEl = el.querySelector(".track-name-text");
+    const artistEl = el.querySelector(".track-artist");
+    const editBtn = el.querySelector(".edit-btn");
+    nameEl.innerHTML = `<input class="edit-input" value="${track.title.replace(/"/g, '&quot;')}" />`;
+    artistEl.innerHTML = `<input class="edit-input edit-input-artist" value="${(track.artist || "").replace(/"/g, '&quot;')}" />`;
+    editBtn.title = "Sauvegarder";
+    editBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    editBtn.onclick = () => saveTrack(id, el);
+    el.querySelector(".edit-input").focus();
+  };
+
+  window.saveTrack = async (id, el) => {
+    const inputs = el.querySelectorAll(".edit-input");
+    const title = inputs[0].value.trim();
+    const artist = inputs[1].value.trim();
+    if (!title) { showToast("Le titre ne peut pas être vide", "error"); return; }
+    try {
+      await updateDoc(doc(db, COL, id), { title, artist });
+      const t = tracks.find(t => t.id === id);
+      if (t) { t.title = title; t.artist = artist; }
+      renderTracks();
+      showToast("Modifié ✓", "success");
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
   async function addTrack(title, artist, source = "manual") {
     const data = { title, artist: artist || "", downloaded: false, createdAt: new Date(), source };
     try {
@@ -761,8 +809,8 @@
     } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
   }
 
-  $("fileInput").addEventListener("change", e => {
-    const file = e.target.files[0];
+  function loadQueueImage(index) {
+    const file = imageQueue[index];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
@@ -774,8 +822,23 @@
       $("actionsRow").style.display = "none";
       $("btnAnalyzeText").textContent = "Analyser avec Claude Vision";
       pendingTracks = null;
+      const badge = $("queueBadge");
+      if (imageQueue.length > 1) {
+        badge.style.display = "block";
+        badge.textContent = `Image ${index + 1} / ${imageQueue.length}`;
+      } else {
+        badge.style.display = "none";
+      }
     };
     reader.readAsDataURL(file);
+  }
+
+  $("fileInput").addEventListener("change", e => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    imageQueue = files;
+    queueIndex = 0;
+    loadQueueImage(0);
   });
 
   const uploadZone = $("uploadZone");
@@ -784,19 +847,11 @@
   uploadZone.addEventListener("drop", e => {
     e.preventDefault();
     uploadZone.classList.remove("drag-over");
-    const file = e.dataTransfer.files[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const b64 = ev.target.result;
-      currentImageBase64 = b64.split(",")[1];
-      $("previewImg").src = b64;
-      $("previewCard").classList.add("visible");
-      $("analysisResult").classList.remove("visible");
-      $("actionsRow").style.display = "none";
-      pendingTracks = null;
-    };
-    reader.readAsDataURL(file);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+    if (!files.length) return;
+    imageQueue = files;
+    queueIndex = 0;
+    loadQueueImage(0);
   });
 
   $("btnAnalyze").addEventListener("click", async () => {
@@ -890,8 +945,16 @@ Si tu ne trouves aucune musique, réponds : {"tracks":[],"note":"Aucune musique 
     for (const t of toSave) {
       await addTrack(t.title, t.artist || "", "vision");
     }
-    $("previewCard").classList.remove("visible");
-    $("fileInput").value = "";
+    queueIndex++;
+    if (queueIndex < imageQueue.length) {
+      loadQueueImage(queueIndex);
+    } else {
+      $("previewCard").classList.remove("visible");
+      $("fileInput").value = "";
+      imageQueue = [];
+      queueIndex = 0;
+      $("queueBadge").style.display = "none";
+    }
     currentImageBase64 = null;
     pendingTracks = null;
   });
@@ -900,7 +963,10 @@ Si tu ne trouves aucune musique, réponds : {"tracks":[],"note":"Aucune musique 
     $("previewCard").classList.remove("visible");
     $("fileInput").value = "";
     currentImageBase64 = null;
-    pendingTrack = null;
+    imageQueue = [];
+    queueIndex = 0;
+    $("queueBadge").style.display = "none";
+    pendingTracks = null;
   });
 
   $("btnManual").addEventListener("click", async () => {
