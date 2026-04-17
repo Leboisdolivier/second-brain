@@ -1,0 +1,31 @@
+{
+  "name": "Second Brain",
+  "short_name": "Second Brain",
+  "description": "Ton cerveau numérique personnel",
+  "start_url": "/second-brain/",
+  "scope": "/second-brain/",
+  "display": "standalone",
+  "background_color": "#0e0e0f",
+  "theme_color": "#0e0e0f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/second-brain/",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "image",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  }
+}

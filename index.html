@@ -2,30 +2,34 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Second Brain — Musique</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e0f">
+<title>Second Brain</title>
+<link rel="manifest" href="manifest.json">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0e0e0f;
+    --bg:  #0e0e0f;
     --bg2: #161618;
     --bg3: #1e1e21;
-    --border: rgba(255,255,255,0.08);
+    --border:  rgba(255,255,255,0.08);
     --border2: rgba(255,255,255,0.14);
-    --text: #f0ede8;
+    --text:  #f0ede8;
     --text2: #9c9890;
     --text3: #5c5a57;
-    --accent: #e8c97a;
+    --accent:  #e8c97a;
     --accent2: #c4a558;
     --accent-bg: rgba(232,201,122,0.08);
-    --danger: #e06060;
+    --danger:  #e06060;
     --success: #6abf8a;
     --radius: 10px;
     --font-head: 'Syne', sans-serif;
     --font-mono: 'DM Mono', monospace;
+    --nav-h: 56px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   body {
@@ -35,270 +39,235 @@
     min-height: 100vh;
     font-size: 14px;
     line-height: 1.6;
+    overscroll-behavior: none;
   }
 
   .app {
     max-width: 680px;
     margin: 0 auto;
-    padding: 24px 16px 80px;
+    padding: 20px 16px calc(var(--nav-h) + var(--safe-bottom) + 16px);
   }
 
+  /* ── HEADER ── */
   header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 32px;
-    padding-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
     border-bottom: 0.5px solid var(--border);
   }
 
   .logo {
-    width: 36px;
-    height: 36px;
+    width: 34px; height: 34px;
     background: var(--accent);
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-
-  .logo svg { width: 18px; height: 18px; }
+  .logo svg { width: 17px; height: 17px; }
 
   header h1 {
     font-family: var(--font-head);
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
-    color: var(--text);
     letter-spacing: -0.3px;
+    flex: 1;
   }
 
-  header span {
-    font-size: 12px;
-    color: var(--text3);
-    font-weight: 300;
-    display: block;
+  .api-mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 24px;
-  }
-
-  .stat {
+  .api-mini input {
+    width: 110px;
     background: var(--bg2);
     border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-  }
-
-  .stat-val {
-    font-family: var(--font-head);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .stat-label {
+    border-radius: 6px;
+    padding: 5px 8px;
+    color: var(--text2);
+    font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    outline: none;
   }
+  .api-mini input:focus { border-color: var(--accent); }
+  .btn-icon-sm {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    border: 0.5px solid var(--border);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-icon-sm:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* ── BOTTOM TAB NAV ── */
+  .tab-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: calc(var(--nav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--bg2);
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    z-index: 50;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 14px;
+    min-width: 60px;
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.3px;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-btn .tab-icon { font-size: 18px; line-height: 1; }
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn.active .tab-icon { filter: drop-shadow(0 0 6px rgba(232,201,122,0.5)); }
+
+  /* ── PANELS ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── UPLOAD ZONE ── */
   .upload-zone {
     background: var(--bg2);
     border: 1.5px dashed var(--border2);
     border-radius: var(--radius);
-    padding: 32px 20px;
+    padding: 28px 20px;
     text-align: center;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     position: relative;
     overflow: hidden;
   }
-
   .upload-zone:hover, .upload-zone.drag-over {
     border-color: var(--accent);
     background: var(--accent-bg);
   }
-
   .upload-zone input[type=file] {
     position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
   }
-
   .upload-icon {
-    width: 44px; height: 44px;
+    width: 42px; height: 42px;
     background: var(--bg3);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 12px;
+    margin: 0 auto 10px;
   }
-
   .upload-icon svg { width: 20px; height: 20px; color: var(--accent); }
+  .upload-zone p  { font-size: 13px; color: var(--text2); margin-bottom: 3px; }
+  .upload-zone small { font-size: 11px; color: var(--text3); }
 
-  .upload-zone p {
-    font-size: 13px;
-    color: var(--text2);
-    margin-bottom: 4px;
-  }
-
-  .upload-zone small {
-    font-size: 11px;
-    color: var(--text3);
-  }
-
-  .api-section {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 24px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .api-section label {
-    font-size: 11px;
-    color: var(--text3);
-    white-space: nowrap;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .api-section input {
-    flex: 1;
-    background: var(--bg3);
-    border: 0.5px solid var(--border);
-    border-radius: 6px;
-    padding: 7px 10px;
-    color: var(--text2);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    outline: none;
-  }
-
-  .api-section input:focus { border-color: var(--accent); }
-
+  /* ── PREVIEW CARD ── */
   .preview-card {
     background: var(--bg2);
     border: 0.5px solid var(--border2);
     border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 16px;
+    padding: 14px;
+    margin-bottom: 14px;
     display: none;
   }
-
   .preview-card.visible { display: block; }
-
   .preview-img {
-    width: 100%;
-    max-height: 200px;
-    object-fit: cover;
-    border-radius: 6px;
-    margin-bottom: 12px;
+    width: 100%; max-height: 180px; object-fit: cover;
+    border-radius: 6px; margin-bottom: 10px;
+  }
+  .queue-badge {
+    font-size: 11px; color: var(--text3); text-align: center;
+    padding: 0 0 6px; font-family: var(--font-mono);
   }
 
+  /* ── ANALYSIS RESULT ── */
   .analysis-result {
     background: var(--bg3);
     border: 0.5px solid var(--border);
     border-radius: 6px;
-    padding: 12px 14px;
-    margin-bottom: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
     display: none;
   }
-
   .analysis-result.visible { display: block; }
 
-  .result-track {
+  .detected-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
     font-family: var(--font-head);
-    font-size: 15px;
     font-weight: 600;
-    color: var(--text);
-    margin-bottom: 2px;
-  }
-
-  .result-artist {
-    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
     color: var(--accent);
+    background: var(--accent-bg);
+    border: 0.5px solid rgba(232,201,122,0.2);
+    border-radius: 4px;
+    padding: 3px 8px;
     margin-bottom: 8px;
   }
 
-  .result-note {
-    font-size: 11px;
-    color: var(--text3);
-    font-style: italic;
-  }
-
-  .track-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; }
-  .track-item {
-    display: flex; align-items: center; gap: 8px;
+  .scan-items { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; }
+  .scan-item {
+    display: flex; align-items: flex-start; gap: 8px;
     padding: 7px 9px; background: var(--bg2);
     border-radius: 5px; cursor: pointer;
   }
-  .track-item input[type=checkbox] { accent-color: var(--accent); flex-shrink: 0; width: 15px; height: 15px; }
-  .track-item-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .track-item-artist { font-size: 11px; color: var(--accent); }
+  .scan-item input[type=checkbox] {
+    accent-color: var(--accent); flex-shrink: 0;
+    width: 15px; height: 15px; margin-top: 2px;
+  }
+  .scan-item-title { font-size: 13px; font-weight: 600; }
+  .scan-item-sub   { font-size: 11px; color: var(--accent); }
+  .scan-item-note  { font-size: 10px; color: var(--text3); font-style: italic; }
 
+  .result-note { font-size: 11px; color: var(--text3); font-style: italic; margin-top: 4px; }
+
+  /* ── BUTTONS ── */
   .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 16px;
-    border-radius: 7px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 7px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+    cursor: pointer; border: none;
     transition: opacity 0.15s, transform 0.1s;
   }
-
   .btn:active { transform: scale(0.97); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
   .btn-primary {
-    background: var(--accent);
-    color: #1a1500;
-    width: 100%;
-    justify-content: center;
-    font-size: 13px;
-    padding: 11px;
+    background: var(--accent); color: #1a1500;
+    width: 100%; justify-content: center; font-size: 13px; padding: 11px;
   }
-
   .btn-primary:hover:not(:disabled) { background: var(--accent2); }
-
   .btn-ghost {
-    background: var(--bg3);
-    color: var(--text2);
+    background: var(--bg3); color: var(--text2);
     border: 0.5px solid var(--border);
   }
-
   .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
-
   .btn-success {
-    background: rgba(106, 191, 138, 0.12);
-    color: var(--success);
-    border: 0.5px solid rgba(106, 191, 138, 0.25);
+    background: rgba(106,191,138,0.12); color: var(--success);
+    border: 0.5px solid rgba(106,191,138,0.25);
   }
 
-  .btn-danger {
-    background: rgba(224, 96, 96, 0.1);
-    color: var(--danger);
-    border: 0.5px solid rgba(224, 96, 96, 0.2);
-  }
-
-  .actions-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
+  .actions-row { display: flex; gap: 8px; margin-top: 10px; }
 
   .spinner {
     width: 14px; height: 14px;
@@ -308,233 +277,148 @@
     animation: spin 0.7s linear infinite;
     display: none;
   }
-
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .section-title {
-    font-family: var(--font-head);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  /* ── STATS (music) ── */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-bottom: 16px;
   }
-
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 0.5px;
-    background: var(--border);
+  .stat {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 11px 13px;
   }
-
-  .filter-row {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
+  .stat-val {
+    font-family: var(--font-head); font-size: 22px;
+    font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 3px;
   }
+  .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
 
+  /* ── FILTER ROW ── */
+  .filter-row { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .filter-btn {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    cursor: pointer;
-    border: 0.5px solid var(--border);
-    background: transparent;
-    color: var(--text3);
+    padding: 5px 12px; border-radius: 20px;
+    font-family: var(--font-mono); font-size: 11px;
+    cursor: pointer; border: 0.5px solid var(--border);
+    background: transparent; color: var(--text3);
     transition: all 0.15s;
   }
-
   .filter-btn:hover, .filter-btn.active {
-    background: var(--accent-bg);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: var(--accent-bg); border-color: var(--accent); color: var(--accent);
   }
 
-  .track-list { display: flex; flex-direction: column; gap: 6px; }
+  /* ── ITEM LIST ── */
+  .item-list { display: flex; flex-direction: column; gap: 6px; }
 
-  .edit-input {
-    background: var(--bg3); border: 0.5px solid var(--accent);
-    border-radius: 4px; color: var(--text1); padding: 2px 6px;
-    font-family: inherit; font-size: inherit; width: 100%;
-    outline: none;
-  }
-  .edit-input-artist { font-size: 11px; color: var(--accent); margin-top: 2px; }
-  .queue-badge {
-    font-size: 11px; color: var(--text3); text-align: center;
-    padding: 4px 0 0; font-family: var(--font-mono);
-  }
-
-  .track-item {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  .item-row {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 11px 13px;
+    display: flex; align-items: center; gap: 10px;
     transition: border-color 0.15s;
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn 0.25s ease;
   }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
 
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .item-row:hover { border-color: var(--border2); }
+  .item-row.done-item { opacity: 0.5; border-style: dashed; }
+  .item-row.done-item .item-title { text-decoration: line-through; color: var(--text3); }
 
-  .track-item:hover { border-color: var(--border2); }
-
-  .track-item.downloaded {
-    opacity: 0.5;
-    border-style: dashed;
+  .item-num { font-size: 11px; color: var(--text3); min-width: 18px; text-align: right; font-weight: 300; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-title {
+    font-family: var(--font-head); font-size: 14px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-
-  .track-num {
-    font-size: 11px;
-    color: var(--text3);
-    min-width: 20px;
-    text-align: right;
-    font-weight: 300;
-  }
-
-  .track-info { flex: 1; min-width: 0; }
-
-  .track-name {
-    font-family: var(--font-head);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .track-item.downloaded .track-name {
-    text-decoration: line-through;
-    color: var(--text3);
-  }
-
-  .track-artist {
-    font-size: 11px;
-    color: var(--text3);
-    margin-top: 1px;
-  }
-
-  .track-date {
-    font-size: 10px;
-    color: var(--text3);
-    white-space: nowrap;
-    font-weight: 300;
-  }
-
-  .track-actions { display: flex; gap: 5px; }
+  .item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .item-date { font-size: 10px; color: var(--text3); white-space: nowrap; font-weight: 300; }
+  .item-actions { display: flex; gap: 4px; }
 
   .icon-btn {
-    width: 28px; height: 28px;
-    border-radius: 6px;
+    width: 28px; height: 28px; border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    border: 0.5px solid var(--border);
-    background: transparent;
-    color: var(--text3);
-    transition: all 0.15s;
-    flex-shrink: 0;
+    cursor: pointer; border: 0.5px solid var(--border);
+    background: transparent; color: var(--text3);
+    transition: all 0.15s; flex-shrink: 0;
   }
-
   .icon-btn:hover { border-color: var(--border2); color: var(--text); }
-  .icon-btn.done { color: var(--success); border-color: rgba(106,191,138,0.3); background: rgba(106,191,138,0.08); }
+  .icon-btn.done  { color: var(--success); border-color: rgba(106,191,138,0.3); background: rgba(106,191,138,0.08); }
   .icon-btn.del:hover { color: var(--danger); border-color: rgba(224,96,96,0.3); background: rgba(224,96,96,0.08); }
+  .icon-btn.edit-btn { }
 
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--text3);
-    font-size: 13px;
+  /* ── EDIT INLINE ── */
+  .edit-input {
+    background: var(--bg3); border: 0.5px solid var(--accent);
+    border-radius: 4px; color: var(--text); padding: 2px 6px;
+    font-family: inherit; font-size: inherit; width: 100%; outline: none;
+  }
+  .edit-input-sub { font-size: 11px; margin-top: 2px; }
+
+  /* ── TAG ── */
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 7px; border-radius: 4px; font-size: 10px;
+    background: var(--accent-bg); color: var(--accent2);
+    border: 0.5px solid rgba(232,201,122,0.2); margin-left: 5px;
   }
 
-  .empty-state svg { width: 40px; height: 40px; margin: 0 auto 12px; display: block; opacity: 0.3; }
-
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--bg3);
-    border: 0.5px solid var(--border2);
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 13px;
-    color: var(--text);
-    transition: transform 0.3s ease;
-    z-index: 999;
-    white-space: nowrap;
-  }
-
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.success { border-color: rgba(106,191,138,0.4); color: var(--success); }
-  .toast.error { border-color: rgba(224,96,96,0.4); color: var(--danger); }
-
-  .loading-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(14,14,15,0.8);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .loading-overlay.visible { display: flex; }
-
-  .loading-ring {
-    width: 48px; height: 48px;
-    border: 3px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  .loading-text { font-size: 13px; color: var(--text2); }
-
+  /* ── MANUAL ADD ── */
   .manual-add {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 24px;
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px; margin-top: 14px;
   }
-
-  .manual-row { display: flex; gap: 8px; }
-
+  .manual-row { display: flex; gap: 6px; flex-wrap: wrap; }
   .manual-row input {
-    flex: 1;
-    background: var(--bg3);
-    border: 0.5px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 10px;
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    outline: none;
+    flex: 1; min-width: 100px;
+    background: var(--bg3); border: 0.5px solid var(--border);
+    border-radius: 6px; padding: 7px 9px; color: var(--text);
+    font-family: var(--font-mono); font-size: 12px; outline: none;
   }
-
   .manual-row input:focus { border-color: var(--accent); }
   .manual-row input::placeholder { color: var(--text3); }
 
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    background: var(--accent-bg);
-    color: var(--accent2);
-    border: 0.5px solid rgba(232,201,122,0.2);
-    margin-left: 6px;
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text3); font-size: 12px;
   }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px); left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--bg3); border: 0.5px solid var(--border2);
+    border-radius: 8px; padding: 9px 16px;
+    font-size: 13px; color: var(--text);
+    transition: transform 0.25s ease; z-index: 999; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: rgba(106,191,138,0.4); color: var(--success); }
+  .toast.error   { border-color: rgba(224,96,96,0.4);   color: var(--danger); }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(14,14,15,0.85);
+    z-index: 200; align-items: center; justify-content: center;
+    flex-direction: column; gap: 14px;
+  }
+  .loading-overlay.visible { display: flex; }
+  .loading-ring {
+    width: 46px; height: 46px;
+    border: 3px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  .loading-text { font-size: 13px; color: var(--text2); }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: var(--font-head); font-size: 12px; font-weight: 600;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
 </style>
 </head>
 <body>
@@ -551,96 +435,107 @@
   <header>
     <div class="logo">
       <svg viewBox="0 0 24 24" fill="none" stroke="#1a1500" stroke-width="2.5" stroke-linecap="round">
-        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
       </svg>
     </div>
-    <div>
-      <h1>Second Brain — Musique</h1>
-      <span>Liste de téléchargement</span>
+    <h1>Second Brain</h1>
+    <div class="api-mini">
+      <input type="password" id="apiKey" placeholder="sk-ant-…" title="Clé API Anthropic" />
+      <button class="btn-icon-sm" id="btnSaveKey" title="Sauvegarder la clé">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </button>
     </div>
   </header>
 
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-val" id="statTotal">0</div>
-      <div class="stat-label">Total</div>
+  <!-- SCAN PANEL -->
+  <div class="panel active" id="panel-scan">
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="image/*" multiple />
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+      </div>
+      <p>Dépose tes screenshots ici</p>
+      <small>ou clique pour choisir une ou plusieurs images</small>
     </div>
-    <div class="stat">
-      <div class="stat-val" id="statPending">0</div>
-      <div class="stat-label">À télécharger</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="statDone">0</div>
-      <div class="stat-label">Téléchargés</div>
+
+    <div class="preview-card" id="previewCard">
+      <div class="queue-badge" id="queueBadge" style="display:none"></div>
+      <img id="previewImg" class="preview-img" />
+      <div class="analysis-result" id="analysisResult">
+        <div class="detected-cat" id="detectedCat" style="display:none"></div>
+        <div id="scanItemsContainer"></div>
+        <div class="result-note" id="resultNote"></div>
+      </div>
+      <button class="btn btn-primary" id="btnAnalyze">
+        <div class="spinner" id="spinner"></div>
+        <span id="btnAnalyzeText">Analyser avec Claude Vision</span>
+      </button>
+      <div class="actions-row" id="actionsRow" style="display:none">
+        <button class="btn btn-success" id="btnSave" style="flex:1">Ajouter</button>
+        <button class="btn btn-ghost" id="btnCancel">Annuler</button>
+      </div>
     </div>
   </div>
 
-  <div class="api-section">
-    <label>Clé API</label>
-    <input type="password" id="apiKey" placeholder="sk-ant-…" />
-    <button class="btn btn-ghost" id="btnSaveKey" style="white-space:nowrap;padding:7px 12px;font-size:11px">Sauvegarder</button>
-  </div>
-
-  <div class="upload-zone" id="uploadZone">
-    <input type="file" id="fileInput" accept="image/*" multiple />
-    <div class="upload-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-        <polyline points="21 15 16 10 5 21"/>
-      </svg>
+  <!-- MUSIC PANEL -->
+  <div class="panel" id="panel-music">
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val" id="statTotal">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statPending">0</div>
+        <div class="stat-label">À télécharger</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statDone">0</div>
+        <div class="stat-label">Téléchargés</div>
+      </div>
     </div>
-    <p>Dépose tes screenshots ici</p>
-    <small>ou clique pour choisir une ou plusieurs images</small>
-  </div>
-
-  <div class="preview-card" id="previewCard">
-    <div class="queue-badge" id="queueBadge" style="display:none"></div>
-    <img id="previewImg" class="preview-img" />
-    <div class="analysis-result" id="analysisResult">
-      <div id="trackListContainer"></div>
-      <div class="result-note" id="resultNote"></div>
+    <div class="filter-row" id="musicFilterRow">
+      <button class="filter-btn active" data-filter="all">Tout</button>
+      <button class="filter-btn" data-filter="pending">À télécharger</button>
+      <button class="filter-btn" data-filter="done">Téléchargés</button>
     </div>
-    <button class="btn btn-primary" id="btnAnalyze">
-      <div class="spinner" id="spinner"></div>
-      <span id="btnAnalyzeText">Analyser avec Claude Vision</span>
-    </button>
-    <div class="actions-row" id="actionsRow" style="display:none">
-      <button class="btn btn-success" id="btnSave" style="flex:1">Ajouter à la liste</button>
-      <button class="btn btn-ghost" id="btnCancel">Annuler</button>
+    <div class="item-list" id="list-music">
+      <div class="empty-state" id="empty-music">
+        <div class="empty-icon">🎵</div>
+        Aucune chanson pour l'instant.
+      </div>
     </div>
-  </div>
-
-  <div class="manual-add">
-    <div class="manual-row">
-      <input type="text" id="manualTitle" placeholder="Titre" />
-      <input type="text" id="manualArtist" placeholder="Artiste (optionnel)" style="max-width:180px" />
-      <button class="btn btn-ghost" id="btnManual" style="white-space:nowrap">+ Ajouter</button>
+    <div class="manual-add">
+      <div class="manual-row">
+        <input type="text" id="manual-title-music" placeholder="Titre" />
+        <input type="text" id="manual-sub-music" placeholder="Artiste" style="max-width:150px" />
+        <button class="btn btn-ghost" data-add="music" style="white-space:nowrap;padding:7px 12px;font-size:12px">+ Ajouter</button>
+      </div>
     </div>
   </div>
 
-  <div class="section-title">Liste</div>
-
-  <div class="filter-row">
-    <button class="filter-btn active" data-filter="all">Tout</button>
-    <button class="filter-btn" data-filter="pending">À télécharger</button>
-    <button class="filter-btn" data-filter="done">Téléchargés</button>
-  </div>
-
-  <div class="track-list" id="trackList">
-    <div class="empty-state" id="emptyState">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-      </svg>
-      Aucune chanson pour l'instant.<br>Envoie un screenshot pour commencer.
-    </div>
-  </div>
+  <!-- GENERIC PANELS (injected by JS) -->
+  <div id="genericPanels"></div>
 
 </div>
 
+<!-- BOTTOM TAB NAV (injected by JS) -->
+<nav class="tab-nav" id="tabNav"></nav>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, setDoc, getDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  // ── CONFIG ──────────────────────────────────────────────────────────
   const firebaseConfig = {
     apiKey: "AIzaSyAGQhsIG0EaLZffLe2FvxQJWWjVJypkywE",
     authDomain: "second-brain-91664.firebaseapp.com",
@@ -650,19 +545,40 @@
     appId: "1:910954096501:web:d30d7b47a0c1bb56bf953c"
   };
 
-  const fbApp = initializeApp(firebaseConfig);
-  const db = getFirestore(fbApp);
-  const COL = "music_downloads";
+  const TABS = [
+    { id: "scan",      label: "Scan",      icon: "📷" },
+    { id: "music",     label: "Musique",   icon: "🎵", col: "music_downloads", doneLabel: "Téléchargé", subHint: "Artiste", claudeCat: "music" },
+    { id: "watchlist", label: "Films",     icon: "🎬", col: "brain_items",     doneLabel: "Vu",         subHint: "Plateforme", claudeCat: "watchlist" },
+    { id: "recette",   label: "Recettes",  icon: "🍳", col: "brain_items",     doneLabel: "Essayée",    subHint: "Source", claudeCat: "recette" },
+    { id: "bricolage", label: "Bricolage", icon: "🔨", col: "brain_items",     doneLabel: "Fait",       subHint: "Type", claudeCat: "bricolage" },
+    { id: "resine",    label: "Résine",    icon: "🫧", col: "brain_items",     doneLabel: "Fait",       subHint: "Technique", claudeCat: "resine" },
+    { id: "deco",      label: "Déco",      icon: "🏡", col: "brain_items",     doneLabel: "Acheté",     subHint: "Style", claudeCat: "deco" },
+    { id: "ia",        label: "IA",        icon: "🤖", col: "brain_items",     doneLabel: "Testé",      subHint: "Outil / lien", claudeCat: "ia" },
+    { id: "concert",   label: "Concerts",  icon: "🎤", col: "brain_items",     doneLabel: "Vu",         subHint: "Lieu / date", claudeCat: "concert" },
+    { id: "instagram", label: "Instagram", icon: "📸", col: "brain_items",     doneLabel: "Sauvegardé", subHint: "@compte", claudeCat: "instagram" },
+    { id: "activite",  label: "Activités", icon: "🏃", col: "brain_items",     doneLabel: "Fait",       subHint: "Lieu", claudeCat: "activite" },
+  ];
 
-  let tracks = [];
-  let currentFilter = "all";
-  let pendingTracks = null;
-  let currentImageBase64 = null;
-  let imageQueue = [];
-  let queueIndex = 0;
+  const GENERIC_TABS = TABS.filter(t => t.id !== "scan" && t.id !== "music");
+
+  // ── FIREBASE ────────────────────────────────────────────────────────
+  const fbApp = initializeApp(firebaseConfig);
+  const db    = getFirestore(fbApp);
+
+  // ── STATE ───────────────────────────────────────────────────────────
+  let musicItems      = [];
+  let musicFilter     = "all";
+  const genericData   = {}; // { tabId: { items: [], loaded: false, filter: "all" } }
+  let pendingScan     = null; // { category, items: [{title,subtitle,note}] }
+  let currentImgB64   = null;
+  let currentImgType  = "image/jpeg";
+  let imageQueue      = [];
+  let queueIndex      = 0;
+  let activeTabId     = "scan";
 
   const $ = id => document.getElementById(id);
 
+  // ── UTILS ───────────────────────────────────────────────────────────
   function showToast(msg, type = "") {
     const t = $("toast");
     t.textContent = msg;
@@ -670,8 +586,8 @@
     setTimeout(() => t.className = "toast", 2800);
   }
 
-  function setLoading(visible, text = "Analyse en cours…") {
-    $("loadingOverlay").classList.toggle("visible", visible);
+  function setLoading(on, text = "Analyse en cours…") {
+    $("loadingOverlay").classList.toggle("visible", on);
     $("loadingText").textContent = text;
   }
 
@@ -681,147 +597,349 @@
     return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
   }
 
-  function updateStats() {
-    const total = tracks.length;
-    const done = tracks.filter(t => t.downloaded).length;
-    $("statTotal").textContent = total;
-    $("statPending").textContent = total - done;
-    $("statDone").textContent = done;
+  function tabConfig(id) { return TABS.find(t => t.id === id); }
+
+  function esc(str) { return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+  // ── TAB NAV INIT ────────────────────────────────────────────────────
+  function buildNav() {
+    const nav = $("tabNav");
+    nav.innerHTML = TABS.map(t => `
+      <button class="tab-btn${t.id === "scan" ? " active" : ""}" data-tab="${t.id}">
+        <span class="tab-icon">${t.icon}</span>
+        <span>${t.label}</span>
+      </button>`).join("");
+    nav.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+    // scroll active into view
+    nav.querySelector(".tab-btn.active")?.scrollIntoView({ inline: "center", behavior: "smooth" });
   }
 
-  function renderTracks() {
-    const list = $("trackList");
-    const empty = $("emptyState");
-    const filtered = tracks.filter(t => {
-      if (currentFilter === "pending") return !t.downloaded;
-      if (currentFilter === "done") return t.downloaded;
-      return true;
+  function buildGenericPanels() {
+    const host = $("genericPanels");
+    host.innerHTML = GENERIC_TABS.map(t => `
+      <div class="panel" id="panel-${t.id}">
+        <div class="filter-row">
+          <button class="filter-btn active" data-tab="${t.id}" data-filter="all">Tout</button>
+          <button class="filter-btn" data-tab="${t.id}" data-filter="pending">À faire</button>
+          <button class="filter-btn" data-tab="${t.id}" data-filter="done">${esc(t.doneLabel)}</button>
+        </div>
+        <div class="item-list" id="list-${t.id}">
+          <div class="empty-state" id="empty-${t.id}">
+            <div class="empty-icon">${t.icon}</div>
+            Rien ici pour l'instant.
+          </div>
+        </div>
+        <div class="manual-add">
+          <div class="manual-row">
+            <input type="text" id="manual-title-${t.id}" placeholder="Titre / description" />
+            <input type="text" id="manual-sub-${t.id}" placeholder="${esc(t.subHint)}" style="max-width:150px" />
+            <button class="btn btn-ghost" data-add="${t.id}" style="white-space:nowrap;padding:7px 12px;font-size:12px">+ Ajouter</button>
+          </div>
+        </div>
+      </div>`).join("");
+
+    // filter buttons
+    host.querySelectorAll(".filter-btn[data-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tid = btn.dataset.tab;
+        host.querySelectorAll(`.filter-btn[data-tab="${tid}"]`).forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (!genericData[tid]) genericData[tid] = { items: [], loaded: false, filter: "all" };
+        genericData[tid].filter = btn.dataset.filter;
+        renderGeneric(tid);
+      });
     });
 
-    if (filtered.length === 0) {
-      empty.style.display = "block";
-      const items = list.querySelectorAll(".track-item");
-      items.forEach(i => i.remove());
-      return;
+    // add buttons
+    host.querySelectorAll("[data-add]").forEach(btn => {
+      btn.addEventListener("click", () => handleManualAdd(btn.dataset.add));
+    });
+    host.querySelectorAll(".manual-row input").forEach(inp => {
+      inp.addEventListener("keydown", e => {
+        if (e.key === "Enter") inp.closest(".manual-add").querySelector("[data-add]").click();
+      });
+    });
+  }
+
+  function switchTab(tabId) {
+    activeTabId = tabId;
+    // panels
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    $(`panel-${tabId}`)?.classList.add("active");
+    // nav btns
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(b => {
+      b.classList.add("active");
+      b.scrollIntoView({ inline: "center", behavior: "smooth" });
+    });
+    // lazy load
+    if (tabId === "music" && musicItems.length === 0) loadMusic();
+    if (tabId !== "scan" && tabId !== "music") {
+      if (!genericData[tabId]?.loaded) loadGeneric(tabId);
     }
+  }
 
-    empty.style.display = "none";
-    list.querySelectorAll(".track-item").forEach(i => i.remove());
+  // ── MUSIC CRUD ──────────────────────────────────────────────────────
+  async function loadMusic() {
+    try {
+      const q = query(collection(db, "music_downloads"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      musicItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateMusicStats();
+      renderMusic();
+    } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
+  }
 
-    filtered.forEach((track, idx) => {
+  function updateMusicStats() {
+    const done = musicItems.filter(t => t.downloaded).length;
+    $("statTotal").textContent   = musicItems.length;
+    $("statPending").textContent = musicItems.length - done;
+    $("statDone").textContent    = done;
+  }
+
+  function renderMusic() {
+    const list  = $("list-music");
+    const empty = $("empty-music");
+    const filtered = musicItems.filter(t => {
+      if (musicFilter === "pending") return !t.downloaded;
+      if (musicFilter === "done")    return  t.downloaded;
+      return true;
+    });
+    list.querySelectorAll(".item-row").forEach(el => el.remove());
+    empty.style.display = filtered.length === 0 ? "block" : "none";
+    filtered.forEach((item, i) => {
       const el = document.createElement("div");
-      el.className = "track-item" + (track.downloaded ? " downloaded" : "");
-      el.dataset.id = track.id;
+      el.className = "item-row" + (item.downloaded ? " done-item" : "");
+      el.dataset.id  = item.id;
+      el.dataset.col = "music_downloads";
       el.innerHTML = `
-        <div class="track-num">${idx + 1}</div>
-        <div class="track-info">
-          <div class="track-name"><span class="track-name-text">${track.title}</span>${track.source === "vision" ? '<span class="tag">IA</span>' : ""}</div>
-          <div class="track-artist">${track.artist || "—"}</div>
+        <div class="item-num">${i + 1}</div>
+        <div class="item-info">
+          <div class="item-title"><span class="item-title-text">${esc(item.title)}</span>${item.source === "vision" ? '<span class="tag">IA</span>' : ""}</div>
+          <div class="item-sub">${esc(item.artist || "—")}</div>
         </div>
-        <div class="track-date">${formatDate(track.createdAt)}</div>
-        <div class="track-actions">
-          <button class="icon-btn edit-btn" title="Modifier" onclick="editTrack('${track.id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <div class="item-date">${formatDate(item.createdAt)}</div>
+        <div class="item-actions">
+          <button class="icon-btn edit-btn" title="Modifier" onclick="editItem('${item.id}','music_downloads')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button class="icon-btn ${track.downloaded ? "done" : ""}" title="${track.downloaded ? "Marquer non téléchargé" : "Marquer téléchargé"}" onclick="toggleDone('${track.id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <button class="icon-btn ${item.downloaded ? "done" : ""}" title="${item.downloaded ? "Remettre" : "Marquer téléchargé"}" onclick="toggleMusicDone('${item.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           </button>
-          <button class="icon-btn del" title="Supprimer" onclick="deleteTrack('${track.id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <button class="icon-btn del" title="Supprimer" onclick="deleteItem('${item.id}','music_downloads','music')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>`;
       list.appendChild(el);
     });
   }
 
-  async function loadTracks() {
-    try {
-      const q = query(collection(db, COL), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      tracks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      updateStats();
-      renderTracks();
-    } catch (e) {
-      showToast("Erreur Firebase : " + e.message, "error");
-    }
-  }
-
-  window.toggleDone = async (id) => {
-    const track = tracks.find(t => t.id === id);
-    if (!track) return;
-    try {
-      await updateDoc(doc(db, COL, id), { downloaded: !track.downloaded });
-      track.downloaded = !track.downloaded;
-      updateStats();
-      renderTracks();
-      showToast(track.downloaded ? "Marqué téléchargé ✓" : "Remis en liste", track.downloaded ? "success" : "");
-    } catch (e) { showToast("Erreur : " + e.message, "error"); }
-  };
-
-  window.deleteTrack = async (id) => {
-    try {
-      await deleteDoc(doc(db, COL, id));
-      tracks = tracks.filter(t => t.id !== id);
-      updateStats();
-      renderTracks();
-      showToast("Supprimé");
-    } catch (e) { showToast("Erreur : " + e.message, "error"); }
-  };
-
-  window.editTrack = (id) => {
-    const el = document.querySelector(`.track-item[data-id="${id}"]`);
-    if (!el) return;
-    const track = tracks.find(t => t.id === id);
-    if (!track) return;
-    const nameEl = el.querySelector(".track-name-text");
-    const artistEl = el.querySelector(".track-artist");
-    const editBtn = el.querySelector(".edit-btn");
-    nameEl.innerHTML = `<input class="edit-input" value="${track.title.replace(/"/g, '&quot;')}" />`;
-    artistEl.innerHTML = `<input class="edit-input edit-input-artist" value="${(track.artist || "").replace(/"/g, '&quot;')}" />`;
-    editBtn.title = "Sauvegarder";
-    editBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-    editBtn.onclick = () => saveTrack(id, el);
-    el.querySelector(".edit-input").focus();
-  };
-
-  window.saveTrack = async (id, el) => {
-    const inputs = el.querySelectorAll(".edit-input");
-    const title = inputs[0].value.trim();
-    const artist = inputs[1].value.trim();
-    if (!title) { showToast("Le titre ne peut pas être vide", "error"); return; }
-    try {
-      await updateDoc(doc(db, COL, id), { title, artist });
-      const t = tracks.find(t => t.id === id);
-      if (t) { t.title = title; t.artist = artist; }
-      renderTracks();
-      showToast("Modifié ✓", "success");
-    } catch (e) { showToast("Erreur : " + e.message, "error"); }
-  };
-
-  async function addTrack(title, artist, source = "manual") {
+  async function addMusic(title, artist, source = "manual") {
     const data = { title, artist: artist || "", downloaded: false, createdAt: new Date(), source };
     try {
-      const ref = await addDoc(collection(db, COL), data);
-      tracks.unshift({ id: ref.id, ...data });
-      updateStats();
-      renderTracks();
+      const ref = await addDoc(collection(db, "music_downloads"), data);
+      musicItems.unshift({ id: ref.id, ...data });
+      updateMusicStats();
+      renderMusic();
       showToast("Ajouté : " + title, "success");
     } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
   }
 
+  window.toggleMusicDone = async (id) => {
+    const item = musicItems.find(t => t.id === id);
+    if (!item) return;
+    try {
+      await updateDoc(doc(db, "music_downloads", id), { downloaded: !item.downloaded });
+      item.downloaded = !item.downloaded;
+      updateMusicStats();
+      renderMusic();
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
+  // ── GENERIC CRUD ────────────────────────────────────────────────────
+  async function loadGeneric(tabId) {
+    if (!genericData[tabId]) genericData[tabId] = { items: [], loaded: false, filter: "all" };
+    const cfg = tabConfig(tabId);
+    try {
+      const q = query(
+        collection(db, "brain_items"),
+        where("category", "==", cfg.claudeCat),
+        orderBy("createdAt", "desc")
+      );
+      const snap = await getDocs(q);
+      genericData[tabId].items  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      genericData[tabId].loaded = true;
+      renderGeneric(tabId);
+    } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
+  }
+
+  function renderGeneric(tabId) {
+    const data  = genericData[tabId];
+    const cfg   = tabConfig(tabId);
+    const list  = $(`list-${tabId}`);
+    const empty = $(`empty-${tabId}`);
+    if (!data) return;
+    const filter = data.filter || "all";
+    const filtered = data.items.filter(item => {
+      if (filter === "pending") return !item.done;
+      if (filter === "done")    return  item.done;
+      return true;
+    });
+    list.querySelectorAll(".item-row").forEach(el => el.remove());
+    empty.style.display = filtered.length === 0 ? "block" : "none";
+    filtered.forEach((item, i) => {
+      const el = document.createElement("div");
+      el.className = "item-row" + (item.done ? " done-item" : "");
+      el.dataset.id = item.id;
+      el.innerHTML = `
+        <div class="item-num">${i + 1}</div>
+        <div class="item-info">
+          <div class="item-title"><span class="item-title-text">${esc(item.title)}</span>${item.source === "vision" ? '<span class="tag">IA</span>' : ""}</div>
+          <div class="item-sub">${esc(item.subtitle || "")}</div>
+        </div>
+        <div class="item-date">${formatDate(item.createdAt)}</div>
+        <div class="item-actions">
+          <button class="icon-btn edit-btn" title="Modifier" onclick="editItem('${item.id}','brain_items','${tabId}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="icon-btn ${item.done ? "done" : ""}" title="${item.done ? "Remettre" : esc(cfg.doneLabel)}" onclick="toggleGenericDone('${item.id}','${tabId}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="icon-btn del" title="Supprimer" onclick="deleteItem('${item.id}','brain_items','${tabId}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`;
+      list.appendChild(el);
+    });
+  }
+
+  async function addGeneric(tabId, title, subtitle, note, source = "manual") {
+    const cfg  = tabConfig(tabId);
+    const data = { category: cfg.claudeCat, title, subtitle: subtitle || "", note: note || "", done: false, createdAt: new Date(), source };
+    try {
+      const ref = await addDoc(collection(db, "brain_items"), data);
+      if (!genericData[tabId]) genericData[tabId] = { items: [], loaded: true, filter: "all" };
+      genericData[tabId].items.unshift({ id: ref.id, ...data });
+      genericData[tabId].loaded = true;
+      renderGeneric(tabId);
+      showToast("Ajouté : " + title, "success");
+    } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
+  }
+
+  window.toggleGenericDone = async (id, tabId) => {
+    const item = genericData[tabId]?.items.find(t => t.id === id);
+    if (!item) return;
+    try {
+      await updateDoc(doc(db, "brain_items", id), { done: !item.done });
+      item.done = !item.done;
+      renderGeneric(tabId);
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
+  // ── SHARED EDIT / DELETE ────────────────────────────────────────────
+  window.editItem = (id, col, tabId) => {
+    const el = document.querySelector(`.item-row[data-id="${id}"]`);
+    if (!el) return;
+    let item;
+    if (col === "music_downloads") item = musicItems.find(t => t.id === id);
+    else item = genericData[tabId]?.items.find(t => t.id === id);
+    if (!item) return;
+    const titleEl = el.querySelector(".item-title-text");
+    const subEl   = el.querySelector(".item-sub");
+    const editBtn = el.querySelector(".edit-btn");
+    const subVal  = col === "music_downloads" ? (item.artist || "") : (item.subtitle || "");
+    titleEl.innerHTML = `<input class="edit-input" value="${esc(item.title)}" />`;
+    subEl.innerHTML   = `<input class="edit-input edit-input-sub" value="${esc(subVal)}" />`;
+    editBtn.title     = "Sauvegarder";
+    editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    editBtn.onclick   = () => saveItem(id, col, tabId, el);
+    el.querySelector(".edit-input").focus();
+  };
+
+  window.saveItem = async (id, col, tabId, el) => {
+    const inputs = el.querySelectorAll(".edit-input");
+    const title  = inputs[0].value.trim();
+    const sub    = inputs[1].value.trim();
+    if (!title) { showToast("Le titre ne peut pas être vide", "error"); return; }
+    try {
+      if (col === "music_downloads") {
+        await updateDoc(doc(db, col, id), { title, artist: sub });
+        const item = musicItems.find(t => t.id === id);
+        if (item) { item.title = title; item.artist = sub; }
+        renderMusic();
+      } else {
+        await updateDoc(doc(db, col, id), { title, subtitle: sub });
+        const item = genericData[tabId]?.items.find(t => t.id === id);
+        if (item) { item.title = title; item.subtitle = sub; }
+        renderGeneric(tabId);
+      }
+      showToast("Modifié ✓", "success");
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
+  window.deleteItem = async (id, col, tabId) => {
+    try {
+      await deleteDoc(doc(db, col, id));
+      if (col === "music_downloads") {
+        musicItems = musicItems.filter(t => t.id !== id);
+        updateMusicStats();
+        renderMusic();
+      } else {
+        if (genericData[tabId]) {
+          genericData[tabId].items = genericData[tabId].items.filter(t => t.id !== id);
+        }
+        renderGeneric(tabId);
+      }
+      showToast("Supprimé");
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
+  // ── MANUAL ADD ──────────────────────────────────────────────────────
+  async function handleManualAdd(tabId) {
+    const title = $(`manual-title-${tabId}`)?.value.trim();
+    const sub   = $(`manual-sub-${tabId}`)?.value.trim() || "";
+    if (!title) { showToast("Entre un titre", "error"); return; }
+    if (tabId === "music") {
+      await addMusic(title, sub, "manual");
+    } else {
+      await addGeneric(tabId, title, sub, "", "manual");
+    }
+    $(`manual-title-${tabId}`).value = "";
+    $(`manual-sub-${tabId}`).value   = "";
+  }
+
+  // music filter
+  $("musicFilterRow").querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("musicFilterRow").querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      musicFilter = btn.dataset.filter;
+      renderMusic();
+    });
+  });
+
+  // music manual add
+  document.querySelector("[data-add='music']").addEventListener("click", () => handleManualAdd("music"));
+  $("manual-title-music").addEventListener("keydown", e => { if (e.key === "Enter") handleManualAdd("music"); });
+
+  // ── IMAGE QUEUE ─────────────────────────────────────────────────────
   function loadQueueImage(index) {
     const file = imageQueue[index];
     if (!file) return;
+    currentImgType = file.type || "image/jpeg";
     const reader = new FileReader();
     reader.onload = ev => {
       const b64 = ev.target.result;
-      currentImageBase64 = b64.split(",")[1];
+      currentImgB64 = b64.split(",")[1];
       $("previewImg").src = b64;
       $("previewCard").classList.add("visible");
       $("analysisResult").classList.remove("visible");
       $("actionsRow").style.display = "none";
       $("btnAnalyzeText").textContent = "Analyser avec Claude Vision";
-      pendingTracks = null;
+      $("detectedCat").style.display = "none";
+      pendingScan = null;
       const badge = $("queueBadge");
       if (imageQueue.length > 1) {
         badge.style.display = "block";
@@ -833,11 +951,22 @@
     reader.readAsDataURL(file);
   }
 
+  function resetPreview() {
+    $("previewCard").classList.remove("visible");
+    $("fileInput").value = "";
+    imageQueue  = [];
+    queueIndex  = 0;
+    currentImgB64 = null;
+    pendingScan   = null;
+    $("queueBadge").style.display = "none";
+  }
+
   $("fileInput").addEventListener("change", e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     imageQueue = files;
     queueIndex = 0;
+    switchTab("scan");
     loadQueueImage(0);
   });
 
@@ -854,12 +983,38 @@
     loadQueueImage(0);
   });
 
+  // ── CLAUDE VISION ───────────────────────────────────────────────────
+  const PROMPT = `Analyse cette image et identifie son contenu. Détermine la catégorie et extrais les informations pertinentes.
+
+Catégories possibles :
+- music : chanson YouTube, Shazam, playlist musicale, album
+- watchlist : film ou série TV (Netflix, Disney+, Prime, etc.)
+- recette : plat, recette de cuisine, food
+- bricolage : projet DIY, outil, menuiserie, construction
+- resine : résine époxy, pigments, coulée, moule
+- deco : décoration intérieure, mobilier, design d'espace
+- ia : outil IA, modèle, article sur l'intelligence artificielle
+- concert : concert, festival, spectacle, billet de show
+- instagram : post Instagram, compte creator, contenu social
+- activite : sport, loisir, sortie, événement, activité physique
+
+Réponds UNIQUEMENT en JSON valide sans backticks :
+{"category":"music","items":[{"title":"Titre","subtitle":"Info secondaire","note":""}],"note":""}
+
+Règles :
+- Pour music : subtitle = artiste. Liste TOUS les morceaux visibles dans l'image.
+- Pour watchlist : subtitle = plateforme si visible, précise "série" ou "film" dans note.
+- Pour concert : subtitle = lieu et date si visible.
+- Pour instagram : subtitle = @compte si visible.
+- Pour les autres : subtitle = info pertinente (technique, style, source…).
+- Si rien de reconnaissable : {"category":"unknown","items":[],"note":"Contenu non reconnu"}`;
+
   $("btnAnalyze").addEventListener("click", async () => {
     const apiKey = $("apiKey").value.trim();
-    if (!apiKey) { showToast("Entre ta clé API Anthropic", "error"); return; }
-    if (!currentImageBase64) { showToast("Aucune image chargée", "error"); return; }
+    if (!apiKey)       { showToast("Entre ta clé API Anthropic", "error"); return; }
+    if (!currentImgB64){ showToast("Aucune image chargée", "error"); return; }
 
-    setLoading(true, "Claude analyse ton screenshot…");
+    setLoading(true, "Claude analyse l'image…");
     $("btnAnalyze").disabled = true;
 
     try {
@@ -873,60 +1028,32 @@
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: "image/jpeg", data: currentImageBase64 }
-              },
-              {
-                type: "text",
-                text: `Analyse ce screenshot (YouTube, Shazam, liste de lecture, ou autre source musicale) et extrais TOUS les titres et artistes visibles.
-Réponds UNIQUEMENT en JSON valide, sans backticks ni markdown, exactement ce format :
-{"tracks":[{"title":"Titre","artist":"Artiste"}],"note":"note optionnelle"}
-Si plusieurs morceaux sont visibles, liste-les tous dans le tableau tracks.
-Si tu ne trouves aucune musique, réponds : {"tracks":[],"note":"Aucune musique détectée"}`
-              }
-            ]
-          }]
+          max_tokens: 1500,
+          messages: [{ role: "user", content: [
+            { type: "image", source: { type: "base64", media_type: currentImgType, data: currentImgB64 } },
+            { type: "text", text: PROMPT }
+          ]}]
         })
       });
 
-      const data = await resp.json();
+      const data    = await resp.json();
       const rawText = data.content?.[0]?.text || "";
-
       let parsed;
       try {
-        const clean = rawText.replace(/```json|```/g, "").trim();
-        parsed = JSON.parse(clean);
+        parsed = JSON.parse(rawText.replace(/```json|```/g, "").trim());
       } catch {
         throw new Error("Réponse Claude invalide : " + rawText);
       }
 
-      const tracklist = parsed.tracks || [];
-      if (!tracklist.length) {
-        showToast("Aucune musique détectée dans l'image", "error");
+      if (!parsed.items?.length || parsed.category === "unknown") {
+        showToast("Contenu non reconnu dans l'image", "error");
         setLoading(false);
         $("btnAnalyze").disabled = false;
         return;
       }
 
-      const container = $("trackListContainer");
-      if (tracklist.length === 1) {
-        container.innerHTML = `<div class="result-track">${tracklist[0].title}</div><div class="result-artist">${tracklist[0].artist || "Artiste inconnu"}</div>`;
-        $("btnSave").textContent = "Ajouter à la liste";
-      } else {
-        container.innerHTML = `<div class="track-list">${tracklist.map((t, i) => `<label class="track-item"><input type="checkbox" class="track-cb" data-i="${i}" checked /><div class="track-item-info"><div class="track-item-title">${t.title}</div><div class="track-item-artist">${t.artist || "Artiste inconnu"}</div></div></label>`).join("")}</div>`;
-        $("btnSave").textContent = `Ajouter tout (${tracklist.length})`;
-      }
-
-      pendingTracks = tracklist;
-      $("resultNote").textContent = parsed.note || "";
-      $("analysisResult").classList.add("visible");
-      $("actionsRow").style.display = "flex";
-      $("btnAnalyzeText").textContent = "Réanalyser";
+      pendingScan = parsed;
+      renderScanResult(parsed);
 
     } catch (e) {
       showToast("Erreur : " + e.message, "error");
@@ -936,69 +1063,116 @@ Si tu ne trouves aucune musique, réponds : {"tracks":[],"note":"Aucune musique 
     }
   });
 
-  $("btnSave").addEventListener("click", async () => {
-    if (!pendingTracks?.length) return;
-    const checkboxes = document.querySelectorAll(".track-cb");
-    const toSave = checkboxes.length
-      ? pendingTracks.filter((_, i) => checkboxes[i]?.checked)
-      : pendingTracks;
-    for (const t of toSave) {
-      await addTrack(t.title, t.artist || "", "vision");
+  function catLabel(cat) {
+    const tab = TABS.find(t => t.claudeCat === cat);
+    return tab ? `${tab.icon} ${tab.label}` : cat;
+  }
+
+  function renderScanResult(parsed) {
+    const { category, items, note } = parsed;
+    const catEl = $("detectedCat");
+    catEl.textContent = catLabel(category);
+    catEl.style.display = "inline-flex";
+
+    const container = $("scanItemsContainer");
+    if (items.length === 1) {
+      container.innerHTML = `
+        <div style="font-family:var(--font-head);font-size:15px;font-weight:600;margin-bottom:2px">${esc(items[0].title)}</div>
+        ${items[0].subtitle ? `<div style="font-size:12px;color:var(--accent);margin-bottom:4px">${esc(items[0].subtitle)}</div>` : ""}
+        ${items[0].note     ? `<div style="font-size:11px;color:var(--text3)">${esc(items[0].note)}</div>` : ""}`;
+    } else {
+      container.innerHTML = `<div class="scan-items">${items.map((it, i) => `
+        <label class="scan-item">
+          <input type="checkbox" class="scan-cb" data-i="${i}" checked />
+          <div>
+            <div class="scan-item-title">${esc(it.title)}</div>
+            ${it.subtitle ? `<div class="scan-item-sub">${esc(it.subtitle)}</div>` : ""}
+          </div>
+        </label>`).join("")}</div>`;
     }
+
+    $("resultNote").textContent = note || "";
+    $("analysisResult").classList.add("visible");
+
+    const tab = TABS.find(t => t.claudeCat === category);
+    $("btnSave").textContent = items.length > 1
+      ? `Ajouter à ${tab?.label || category} (${items.length})`
+      : `Ajouter à ${tab?.label || category}`;
+    $("actionsRow").style.display = "flex";
+    $("btnAnalyzeText").textContent = "Réanalyser";
+  }
+
+  // ── SAVE FROM SCAN ──────────────────────────────────────────────────
+  $("btnSave").addEventListener("click", async () => {
+    if (!pendingScan) return;
+    const { category, items } = pendingScan;
+    const checkboxes = document.querySelectorAll(".scan-cb");
+    const toSave = checkboxes.length
+      ? items.filter((_, i) => checkboxes[i]?.checked)
+      : items;
+
+    const tab = TABS.find(t => t.claudeCat === category);
+    if (!tab) { showToast("Catégorie inconnue", "error"); return; }
+
+    for (const it of toSave) {
+      if (tab.id === "music") {
+        await addMusic(it.title, it.subtitle, "vision");
+      } else {
+        await addGeneric(tab.id, it.title, it.subtitle, it.note, "vision");
+      }
+    }
+
     queueIndex++;
     if (queueIndex < imageQueue.length) {
       loadQueueImage(queueIndex);
     } else {
-      $("previewCard").classList.remove("visible");
-      $("fileInput").value = "";
-      imageQueue = [];
-      queueIndex = 0;
-      $("queueBadge").style.display = "none";
+      resetPreview();
     }
-    currentImageBase64 = null;
-    pendingTracks = null;
+
+    if (tab && toSave.length === 1) {
+      // navigate to target tab after short delay
+      setTimeout(() => switchTab(tab.id), 400);
+    }
   });
 
-  $("btnCancel").addEventListener("click", () => {
-    $("previewCard").classList.remove("visible");
-    $("fileInput").value = "";
-    currentImageBase64 = null;
-    imageQueue = [];
-    queueIndex = 0;
-    $("queueBadge").style.display = "none";
-    pendingTracks = null;
-  });
+  $("btnCancel").addEventListener("click", resetPreview);
 
-  $("btnManual").addEventListener("click", async () => {
-    const title = $("manualTitle").value.trim();
-    const artist = $("manualArtist").value.trim();
-    if (!title) { showToast("Entre un titre", "error"); return; }
-    await addTrack(title, artist, "manual");
-    $("manualTitle").value = "";
-    $("manualArtist").value = "";
-  });
+  // ── SHARE TARGET (PWA) ──────────────────────────────────────────────
+  async function checkSharedImages() {
+    if (!location.search.includes("shared=1")) return;
+    history.replaceState({}, "", location.pathname);
+    try {
+      const cache = await caches.open("sb-share-v1");
+      const meta  = await cache.match("/sb-shared-meta");
+      if (!meta) return;
+      const { count } = await meta.json();
+      const files = [];
+      for (let i = 0; i < count; i++) {
+        const r = await cache.match(`/sb-shared-${i}`);
+        if (r) {
+          const blob = await r.blob();
+          files.push(new File([blob], `shared-${i}.jpg`, { type: blob.type || "image/jpeg" }));
+        }
+      }
+      if (files.length) {
+        imageQueue = files;
+        queueIndex = 0;
+        switchTab("scan");
+        loadQueueImage(0);
+        showToast(`${files.length} image${files.length > 1 ? "s" : ""} reçue${files.length > 1 ? "s" : ""}`, "success");
+      }
+      // clear cache
+      const keys = await cache.keys();
+      for (const k of keys) await cache.delete(k);
+    } catch (e) { console.error("Share target read error:", e); }
+  }
 
-  $("manualTitle").addEventListener("keydown", e => {
-    if (e.key === "Enter") $("btnManual").click();
-  });
-
-  document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentFilter = btn.dataset.filter;
-      renderTracks();
-    });
-  });
-
+  // ── API KEY ─────────────────────────────────────────────────────────
   async function loadApiKey() {
     try {
       const snap = await getDoc(doc(db, "settings", "anthropic"));
-      if (snap.exists() && snap.data().apiKey) {
-        $("apiKey").value = snap.data().apiKey;
-        showToast("Clé API chargée", "success");
-      }
-    } catch (e) { }
+      if (snap.exists() && snap.data().apiKey) $("apiKey").value = snap.data().apiKey;
+    } catch (e) {}
   }
 
   $("btnSaveKey").addEventListener("click", async () => {
@@ -1006,12 +1180,22 @@ Si tu ne trouves aucune musique, réponds : {"tracks":[],"note":"Aucune musique 
     if (!key) { showToast("Entre une clé à sauvegarder", "error"); return; }
     try {
       await setDoc(doc(db, "settings", "anthropic"), { apiKey: key });
-      showToast("Clé API sauvegardée ✓", "success");
+      showToast("Clé sauvegardée ✓", "success");
     } catch (e) { showToast("Erreur : " + e.message, "error"); }
   });
 
-  loadApiKey();
-  loadTracks();
+  // ── SERVICE WORKER ──────────────────────────────────────────────────
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/second-brain/sw.js", { scope: "/second-brain/" })
+      .catch(e => console.warn("SW registration failed:", e));
+  }
+
+  // ── INIT ────────────────────────────────────────────────────────────
+  buildNav();
+  buildGenericPanels();
+  await loadApiKey();
+  await checkSharedImages();
+  loadMusic();
 </script>
 </body>
 </html>
