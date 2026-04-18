@@ -413,6 +413,58 @@
   }
   .loading-text { font-size: 13px; color: var(--text2); }
 
+  /* ── CATEGORY SELECTOR ── */
+  .cat-selector {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px; flex-wrap: wrap;
+  }
+  .cat-selector-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+  .cat-select {
+    background: var(--bg2); border: 0.5px solid var(--accent);
+    border-radius: 6px; color: var(--accent); font-family: var(--font-mono);
+    font-size: 12px; padding: 4px 8px; cursor: pointer; outline: none;
+    flex: 1;
+  }
+  .cat-select option { background: var(--bg3); color: var(--text); }
+
+  /* ── NOTES ── */
+  .note-card {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
+    transition: border-color 0.15s; animation: fadeIn 0.25s ease;
+    cursor: pointer;
+  }
+  .note-card:hover { border-color: var(--border2); }
+  .note-card.archived { opacity: 0.5; border-style: dashed; }
+  .note-card-header { display: flex; align-items: flex-start; gap: 8px; }
+  .note-card-title {
+    font-family: var(--font-head); font-size: 14px; font-weight: 500;
+    flex: 1; min-width: 0;
+  }
+  .note-date { font-size: 10px; color: var(--text3); white-space: nowrap; font-weight: 300; }
+  .note-actions { display: flex; gap: 4px; }
+  .note-content {
+    font-size: 12px; color: var(--text2); margin-top: 8px;
+    white-space: pre-wrap; line-height: 1.6;
+    display: none; border-top: 0.5px solid var(--border); padding-top: 8px;
+  }
+  .note-content.expanded { display: block; }
+  .note-preview { font-size: 11px; color: var(--text3); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-new-form {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; display: none;
+  }
+  .note-new-form.visible { display: block; }
+  .note-new-form input, .note-new-form textarea {
+    width: 100%; background: var(--bg3); border: 0.5px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; color: var(--text);
+    font-family: var(--font-mono); font-size: 13px; outline: none; resize: vertical;
+  }
+  .note-new-form input:focus, .note-new-form textarea:focus { border-color: var(--accent); }
+  .note-new-form input::placeholder, .note-new-form textarea::placeholder { color: var(--text3); }
+  .note-new-form textarea { min-height: 100px; margin-top: 6px; }
+  .note-new-form .note-form-actions { display: flex; gap: 6px; margin-top: 8px; }
+
   /* ── KEEP IMAGE TOGGLE ── */
   #btnKeepImg { font-size: 16px; padding: 9px 11px; transition: all 0.15s; }
   #btnKeepImg.active {
@@ -511,7 +563,10 @@
       <div class="queue-badge" id="queueBadge" style="display:none"></div>
       <img id="previewImg" class="preview-img" />
       <div class="analysis-result" id="analysisResult">
-        <div class="detected-cat" id="detectedCat" style="display:none"></div>
+        <div class="cat-selector" id="catSelector" style="display:none">
+          <span class="cat-selector-label">Vers</span>
+          <select class="cat-select" id="catSelect"></select>
+        </div>
         <div id="scanItemsContainer"></div>
         <div class="result-note" id="resultNote"></div>
       </div>
@@ -559,6 +614,25 @@
         <input type="text" id="manual-title-music" placeholder="Titre" />
         <input type="text" id="manual-sub-music" placeholder="Artiste" style="max-width:150px" />
         <button class="btn btn-ghost" data-add="music" style="white-space:nowrap;padding:7px 12px;font-size:12px">+ Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTES PANEL -->
+  <div class="panel" id="panel-notes">
+    <button class="btn btn-ghost" id="btnNewNote" style="width:100%;margin-bottom:14px;justify-content:center">+ Nouvelle note</button>
+    <div class="note-new-form" id="noteNewForm">
+      <input type="text" id="noteTitle" placeholder="Titre (optionnel)" />
+      <textarea id="noteContent" placeholder="Contenu de la note…"></textarea>
+      <div class="note-form-actions">
+        <button class="btn btn-success" id="btnSaveNote" style="flex:1">Sauvegarder</button>
+        <button class="btn btn-ghost" id="btnCancelNote">Annuler</button>
+      </div>
+    </div>
+    <div class="item-list" id="list-notes">
+      <div class="empty-state" id="empty-notes">
+        <div class="empty-icon">📝</div>
+        Aucune note pour l'instant.
       </div>
     </div>
   </div>
@@ -611,9 +685,10 @@
     { id: "activite",  label: "Activités", icon: "🏃", col: "brain_items",     doneLabel: "Fait",       subHint: "Lieu", claudeCat: "activite" },
     { id: "cadeaux",   label: "Cadeaux",   icon: "🎁", col: "brain_items",     doneLabel: "Offert",     subHint: "Pour qui", claudeCat: "cadeaux" },
     { id: "travail",   label: "Travail",   icon: "💼", col: "brain_items",     doneLabel: "Fait",       subHint: "Projet", claudeCat: "travail" },
+    { id: "notes",     label: "Notes",     icon: "📝", col: "brain_items",     doneLabel: "Archivé",    subHint: "Contenu", claudeCat: "notes", isNotes: true },
   ];
 
-  const GENERIC_TABS = TABS.filter(t => t.id !== "scan" && t.id !== "music");
+  const GENERIC_TABS = TABS.filter(t => t.id !== "scan" && t.id !== "music" && !t.isNotes);
 
   // ── FIREBASE ────────────────────────────────────────────────────────
   const fbApp = initializeApp(firebaseConfig);
@@ -631,6 +706,8 @@
   let activeTabId     = "scan";
   let keepImage       = false;
   let modalItemRef    = null; // { id, col, tabId }
+  let notesItems      = [];
+  let notesLoaded     = false;
 
   const $ = id => document.getElementById(id);
 
@@ -747,7 +824,8 @@
     });
     // lazy load
     if (tabId === "music" && musicItems.length === 0) loadMusic();
-    if (tabId !== "scan" && tabId !== "music") {
+    else if (tabId === "notes" && !notesLoaded) loadNotes();
+    else if (tabId !== "scan" && tabId !== "music") {
       if (!genericData[tabId]?.loaded) loadGeneric(tabId);
     }
   }
@@ -974,6 +1052,139 @@
     } catch (e) { showToast("Erreur : " + e.message, "error"); }
   };
 
+  // ── NOTES CRUD ──────────────────────────────────────────────────────
+  async function loadNotes() {
+    try {
+      const q = query(collection(db, "brain_items"), where("category", "==", "notes"));
+      const snap = await getDocs(q);
+      notesItems = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+          const tb = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+          return tb - ta;
+        });
+      notesLoaded = true;
+      renderNotes();
+    } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
+  }
+
+  function renderNotes() {
+    const list  = $("list-notes");
+    const empty = $("empty-notes");
+    list.querySelectorAll(".note-card").forEach(el => el.remove());
+    empty.style.display = notesItems.length === 0 ? "block" : "none";
+    notesItems.forEach(note => {
+      const el = document.createElement("div");
+      el.className = "note-card" + (note.done ? " archived" : "");
+      el.dataset.id = note.id;
+      const preview = (note.content || "").slice(0, 80).replace(/\n/g, " ");
+      el.innerHTML = `
+        <div class="note-card-header">
+          <div class="note-card-title">${esc(note.title || "Sans titre")}</div>
+          <div class="note-date">${formatDate(note.createdAt)}</div>
+          <div class="note-actions">
+            ${note.imageThumb ? `<button class="img-thumb-btn" title="Voir la capture" onclick="viewImage('${note.id}','brain_items','notes')">📷</button>` : ""}
+            <button class="icon-btn edit-btn" title="Modifier" onclick="editNote('${note.id}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="icon-btn ${note.done ? "done" : ""}" title="${note.done ? "Désarchiver" : "Archiver"}" onclick="toggleNoteDone('${note.id}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button class="icon-btn del" title="Supprimer" onclick="deleteNote('${note.id}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        ${preview ? `<div class="note-preview">${esc(preview)}${note.content?.length > 80 ? "…" : ""}</div>` : ""}
+        <div class="note-content" id="note-content-${note.id}">${esc(note.content || "")}</div>`;
+      el.querySelector(".note-card-header").addEventListener("click", e => {
+        if (e.target.closest("button")) return;
+        const contentEl = $(`note-content-${note.id}`);
+        contentEl.classList.toggle("expanded");
+        el.querySelector(".note-preview") && (el.querySelector(".note-preview").style.display =
+          contentEl.classList.contains("expanded") ? "none" : "");
+      });
+      list.appendChild(el);
+    });
+  }
+
+  async function saveNewNote(title, content, source = "manual", imageThumb = null) {
+    const data = { category: "notes", title: title || "Sans titre", content: content || "",
+      done: false, createdAt: new Date(), source, ...(imageThumb ? { imageThumb } : {}) };
+    try {
+      const ref = await addDoc(collection(db, "brain_items"), data);
+      notesItems.unshift({ id: ref.id, ...data });
+      renderNotes();
+      showToast("Note sauvegardée", "success");
+    } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
+  }
+
+  window.editNote = (id) => {
+    const note = notesItems.find(n => n.id === id);
+    if (!note) return;
+    $("noteTitle").value   = note.title || "";
+    $("noteContent").value = note.content || "";
+    $("noteNewForm").classList.add("visible");
+    $("btnSaveNote").dataset.editId = id;
+    $("noteTitle").focus();
+    $("panel-notes").scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  window.toggleNoteDone = async (id) => {
+    const note = notesItems.find(n => n.id === id);
+    if (!note) return;
+    try {
+      await updateDoc(doc(db, "brain_items", id), { done: !note.done });
+      note.done = !note.done;
+      renderNotes();
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
+  window.deleteNote = async (id) => {
+    try {
+      await deleteDoc(doc(db, "brain_items", id));
+      notesItems = notesItems.filter(n => n.id !== id);
+      renderNotes();
+      showToast("Note supprimée");
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
+  $("btnNewNote").addEventListener("click", () => {
+    $("noteNewForm").classList.toggle("visible");
+    delete $("btnSaveNote").dataset.editId;
+    $("noteTitle").value = "";
+    $("noteContent").value = "";
+    $("noteTitle").focus();
+  });
+
+  $("btnCancelNote").addEventListener("click", () => {
+    $("noteNewForm").classList.remove("visible");
+    delete $("btnSaveNote").dataset.editId;
+  });
+
+  $("btnSaveNote").addEventListener("click", async () => {
+    const title   = $("noteTitle").value.trim();
+    const content = $("noteContent").value.trim();
+    if (!content && !title) { showToast("La note est vide", "error"); return; }
+    const editId = $("btnSaveNote").dataset.editId;
+    if (editId) {
+      try {
+        await updateDoc(doc(db, "brain_items", editId), { title: title || "Sans titre", content });
+        const note = notesItems.find(n => n.id === editId);
+        if (note) { note.title = title || "Sans titre"; note.content = content; }
+        renderNotes();
+        showToast("Note modifiée ✓", "success");
+      } catch (e) { showToast("Erreur : " + e.message, "error"); }
+    } else {
+      await saveNewNote(title, content);
+    }
+    $("noteNewForm").classList.remove("visible");
+    delete $("btnSaveNote").dataset.editId;
+    $("noteTitle").value = "";
+    $("noteContent").value = "";
+  });
+
   // ── IMAGE VIEWER ────────────────────────────────────────────────────
   window.viewImage = (id, col, tabId) => {
     let item;
@@ -1055,7 +1266,7 @@
       $("analysisResult").classList.remove("visible");
       $("actionsRow").style.display = "none";
       $("btnAnalyzeText").textContent = "Analyser avec Claude Vision";
-      $("detectedCat").style.display = "none";
+      $("catSelector").style.display = "none";
       pendingScan = null;
       const badge = $("queueBadge");
       if (imageQueue.length > 1) {
@@ -1114,6 +1325,9 @@ Catégories possibles :
 - concert : concert, festival, spectacle, billet de show
 - instagram : post Instagram, compte creator, contenu social
 - activite : sport, loisir, sortie, événement, activité physique
+- cadeaux : idée cadeau, liste de souhaits, produit à offrir
+- travail : tâche pro, projet, réunion, idée business
+- notes : texte manuscrit, capture d'idée, note, mémo, whiteboard, tout contenu à mémoriser
 
 Réponds UNIQUEMENT en JSON valide sans backticks :
 {"category":"music","items":[{"title":"Titre","subtitle":"Info secondaire","note":""}],"note":""}
@@ -1123,6 +1337,7 @@ Règles :
 - Pour watchlist : subtitle = plateforme si visible, précise "série" ou "film" dans note.
 - Pour concert : subtitle = lieu et date si visible.
 - Pour instagram : subtitle = @compte si visible.
+- Pour notes : title = résumé court, subtitle = texte complet extrait ou transcrit depuis l'image.
 - Pour les autres : subtitle = info pertinente (technique, style, source…).
 - Si rien de reconnaissable : {"category":"unknown","items":[],"note":"Contenu non reconnu"}`;
 
@@ -1185,11 +1400,28 @@ Règles :
     return tab ? `${tab.icon} ${tab.label}` : cat;
   }
 
+  function updateSaveBtn() {
+    const cat = pendingScan?.category;
+    const tab = TABS.find(t => t.claudeCat === cat);
+    const count = pendingScan?.items?.length || 0;
+    $("btnSave").textContent = count > 1
+      ? `Ajouter à ${tab?.label || cat} (${count})`
+      : `Ajouter à ${tab?.label || cat}`;
+  }
+
   function renderScanResult(parsed) {
     const { category, items, note } = parsed;
-    const catEl = $("detectedCat");
-    catEl.textContent = catLabel(category);
-    catEl.style.display = "inline-flex";
+
+    // Sélecteur de catégorie modifiable
+    const sel = $("catSelect");
+    sel.innerHTML = TABS.filter(t => t.id !== "scan").map(t =>
+      `<option value="${t.claudeCat}" ${t.claudeCat === category ? "selected" : ""}>${t.icon} ${t.label}</option>`
+    ).join("");
+    $("catSelector").style.display = "flex";
+    sel.onchange = () => {
+      pendingScan.category = sel.value;
+      updateSaveBtn();
+    };
 
     const container = $("scanItemsContainer");
     if (items.length === 1) {
@@ -1210,11 +1442,7 @@ Règles :
 
     $("resultNote").textContent = note || "";
     $("analysisResult").classList.add("visible");
-
-    const tab = TABS.find(t => t.claudeCat === category);
-    $("btnSave").textContent = items.length > 1
-      ? `Ajouter à ${tab?.label || category} (${items.length})`
-      : `Ajouter à ${tab?.label || category}`;
+    updateSaveBtn();
     $("actionsRow").style.display = "flex";
     $("btnAnalyzeText").textContent = "Réanalyser";
   }
@@ -1248,6 +1476,8 @@ Règles :
     for (const it of toSave) {
       if (tab.id === "music") {
         await addMusic(it.title, it.subtitle, "vision", imageThumb);
+      } else if (tab.isNotes) {
+        await saveNewNote(it.title, it.subtitle || it.note, "vision", imageThumb);
       } else {
         await addGeneric(tab.id, it.title, it.subtitle, it.note, "vision", imageThumb);
       }
