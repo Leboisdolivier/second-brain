@@ -3,10 +3,13 @@ const CACHE = 'sb-share-v1';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(clients.claim()));
 
-// Tout POST dans le scope = partage depuis la galerie
+// Seuls les POST same-origin = partage depuis la galerie
 self.addEventListener('fetch', event => {
   if (event.request.method === 'POST') {
-    event.respondWith(handleShare(event.request));
+    const url = new URL(event.request.url);
+    if (url.origin === self.location.origin) {
+      event.respondWith(handleShare(event.request));
+    }
   }
 });
 
