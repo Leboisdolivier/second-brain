@@ -385,12 +385,13 @@
 
   /* ── TOAST ── */
   .toast {
-    position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px); left: 50%;
-    transform: translateX(-50%) translateY(60px);
+    position: fixed; top: 16px; left: 50%;
+    transform: translateX(-50%) translateY(-80px);
     background: var(--bg3); border: 0.5px solid var(--border2);
     border-radius: 8px; padding: 9px 16px;
     font-size: 13px; color: var(--text);
     transition: transform 0.25s ease; z-index: 999; white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.success { border-color: rgba(106,191,138,0.4); color: var(--success); }
@@ -640,7 +641,7 @@
     const t = $("toast");
     t.textContent = msg;
     t.className = "toast show " + type;
-    setTimeout(() => t.className = "toast", 2800);
+    setTimeout(() => t.className = "toast", 2000);
   }
 
   function setLoading(on, text = "Analyse en cours…") {
