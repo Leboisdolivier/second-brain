@@ -3,11 +3,10 @@ const CACHE = 'sb-share-v1';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(clients.claim()));
 
+// Tout POST dans le scope = partage depuis la galerie
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  if (event.request.method === 'POST' && url.searchParams.has('share-target')) {
+  if (event.request.method === 'POST') {
     event.respondWith(handleShare(event.request));
-    return;
   }
 });
 
@@ -15,6 +14,7 @@ async function handleShare(request) {
   try {
     const formData = await request.formData();
     const files = formData.getAll('image');
+    if (!files.length) return Response.redirect('/second-brain/', 303);
     const cache = await caches.open(CACHE);
     const keys = await cache.keys();
     for (const k of keys) await cache.delete(k);
