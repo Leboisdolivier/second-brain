@@ -1239,7 +1239,8 @@
   window.viewImage = (id, col, tabId) => {
     let item;
     if (col === "music_downloads") item = musicItems.find(t => t.id === id);
-    else item = genericData[tabId]?.items.find(t => t.id === id);
+    else if (tabId === "notes")    item = notesItems.find(t => t.id === id);
+    else                           item = genericData[tabId]?.items.find(t => t.id === id);
     if (!item?.imageThumb) return;
     modalItemRef = { id, col, tabId };
     $("imgModalSrc").src = `data:image/jpeg;base64,${item.imageThumb}`;
@@ -1264,6 +1265,10 @@
         const item = musicItems.find(t => t.id === id);
         if (item) delete item.imageThumb;
         renderMusic();
+      } else if (tabId === "notes") {
+        const item = notesItems.find(t => t.id === id);
+        if (item) delete item.imageThumb;
+        renderNotes();
       } else {
         const item = genericData[tabId]?.items.find(t => t.id === id);
         if (item) delete item.imageThumb;
