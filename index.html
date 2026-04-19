@@ -576,7 +576,7 @@
       </button>
       <div class="actions-row" id="actionsRow" style="display:none">
         <button class="btn btn-success" id="btnSave" style="flex:1">Ajouter</button>
-        <button class="btn btn-ghost" id="btnKeepImg" title="Conserver la capture avec l'élément">📷</button>
+        <button class="btn btn-ghost active" id="btnKeepImg" title="Cliquer pour ne pas conserver la capture">📷</button>
         <button class="btn btn-ghost" id="btnCancel">Annuler</button>
       </div>
     </div>
@@ -708,7 +708,7 @@
   let imageQueue      = [];
   let queueIndex      = 0;
   let activeTabId     = "scan";
-  let keepImage       = false;
+  let keepImage       = true;
   let modalItemRef    = null; // { id, col, tabId }
   let notesItems      = [];
   let notesLoaded     = false;
@@ -1460,7 +1460,7 @@ Règles :
   $("btnKeepImg").addEventListener("click", () => {
     keepImage = !keepImage;
     $("btnKeepImg").classList.toggle("active", keepImage);
-    $("btnKeepImg").title = keepImage ? "Capture conservée avec l'élément" : "Conserver la capture avec l'élément";
+    $("btnKeepImg").title = keepImage ? "Cliquer pour ne pas conserver la capture" : "Cliquer pour conserver la capture";
   });
 
   $("btnSave").addEventListener("click", async () => {
@@ -1491,8 +1491,8 @@ Règles :
       }
     }
 
-    keepImage = false;
-    $("btnKeepImg").classList.remove("active");
+    keepImage = true;
+    $("btnKeepImg").classList.add("active");
 
     queueIndex++;
     if (queueIndex < imageQueue.length) {
@@ -1507,8 +1507,8 @@ Règles :
   });
 
   $("btnCancel").addEventListener("click", () => {
-    keepImage = false;
-    $("btnKeepImg").classList.remove("active");
+    keepImage = true;
+    $("btnKeepImg").classList.add("active");
     resetPreview();
   });
 
