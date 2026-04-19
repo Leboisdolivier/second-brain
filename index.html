@@ -349,7 +349,7 @@
   .edit-input {
     background: var(--bg3); border: 0.5px solid var(--accent);
     border-radius: 4px; color: var(--text); padding: 2px 6px;
-    font-family: inherit; font-size: inherit; width: 100%; outline: none;
+    font-family: inherit; font-size: inherit; width: 100%; outline: none; color: var(--text);
   }
   .edit-input-sub { font-size: 11px; margin-top: 2px; }
 
@@ -782,7 +782,7 @@
 
   function tabConfig(id) { return TABS.find(t => t.id === id); }
 
-  function resizeImage(b64, type, maxW = 800) {
+  function resizeImage(b64, type, maxW = 480, quality = 0.55) {
     return new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
@@ -791,7 +791,7 @@
         canvas.width  = Math.round(img.width  * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.7).split(",")[1]);
+        resolve(canvas.toDataURL("image/jpeg", quality).split(",")[1]);
       };
       img.src = `data:${type};base64,${b64}`;
     });
@@ -1050,8 +1050,9 @@
     if (!el) return;
     let item;
     if (col === "music_downloads") item = musicItems.find(t => t.id === id);
-    else item = genericData[tabId]?.items.find(t => t.id === id);
-    if (!item) return;
+    else if (tabId === "notes")   item = notesItems.find(t => t.id === id);
+    else                          item = genericData[tabId]?.items.find(t => t.id === id);
+    if (!item) { showToast("Élément introuvable", "error"); return; }
     const titleEl = el.querySelector(".item-title-text");
     const subEl   = el.querySelector(".item-sub");
     const editBtn = el.querySelector(".edit-btn");
@@ -1082,7 +1083,10 @@
         renderGeneric(tabId);
       }
       showToast("Modifié ✓", "success");
-    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+    } catch (e) {
+      console.error("saveItem error:", e);
+      showToast("Erreur modification : " + e.message, "error");
+    }
   };
 
   window.deleteItem = async (id, col, tabId) => {
