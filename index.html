@@ -413,6 +413,20 @@
   }
   .loading-text { font-size: 13px; color: var(--text2); }
 
+  /* ── ENEX IMPORT ── */
+  .enex-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 6px; overflow: hidden; }
+  .enex-bar { background: var(--accent); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+  .enex-label { font-size: 11px; color: var(--text3); text-align: center; font-family: var(--font-mono); margin-bottom: 12px; }
+
+  /* ── MOVE NOTE ── */
+  .move-select {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: 6px; color: var(--text3); font-family: var(--font-mono);
+    font-size: 10px; padding: 3px 6px; cursor: pointer; outline: none; max-width: 110px;
+  }
+  .move-select:focus { border-color: var(--accent); color: var(--text); }
+  .move-select option { background: var(--bg3); }
+
   /* ── DESTINATION PICKER ── */
   .dest-overlay {
     position: fixed; inset: 0; z-index: 300;
@@ -655,7 +669,17 @@
 
   <!-- NOTES PANEL -->
   <div class="panel" id="panel-notes">
-    <button class="btn btn-ghost" id="btnNewNote" style="width:100%;margin-bottom:14px;justify-content:center">+ Nouvelle note</button>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn btn-ghost" id="btnNewNote" style="flex:1;justify-content:center">+ Nouvelle note</button>
+      <label class="btn btn-ghost" style="cursor:pointer;white-space:nowrap" title="Importer un fichier .enex Evernote">
+        📥 Importer Evernote
+        <input type="file" id="enexInput" accept=".enex" style="display:none" />
+      </label>
+    </div>
+    <div class="enex-progress" id="enexProgress" style="display:none">
+      <div class="enex-bar-wrap"><div class="enex-bar" id="enexBar"></div></div>
+      <div class="enex-label" id="enexLabel">Import en cours…</div>
+    </div>
     <div class="note-new-form" id="noteNewForm">
       <input type="text" id="noteTitle" placeholder="Titre (optionnel)" />
       <textarea id="noteContent" placeholder="Contenu de la note…"></textarea>
@@ -1149,18 +1173,48 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
+          <select class="move-select" data-note-id="${note.id}" title="Déplacer vers un onglet">
+            <option value="">→ Déplacer vers…</option>
+            ${TABS.filter(t => t.id !== "scan" && t.id !== "notes").map(t =>
+              `<option value="${t.id}">${t.icon} ${t.label}</option>`).join("")}
+          </select>
         </div>
         ${preview ? `<div class="note-preview">${esc(preview)}${note.content?.length > 80 ? "…" : ""}</div>` : ""}
         <div class="note-content" id="note-content-${note.id}">${esc(note.content || "")}</div>`;
       el.querySelector(".note-card-header").addEventListener("click", e => {
-        if (e.target.closest("button")) return;
+        if (e.target.closest("button") || e.target.closest("select")) return;
         const contentEl = $(`note-content-${note.id}`);
         contentEl.classList.toggle("expanded");
         el.querySelector(".note-preview") && (el.querySelector(".note-preview").style.display =
           contentEl.classList.contains("expanded") ? "none" : "");
       });
+      el.querySelector(".move-select").addEventListener("change", async e => {
+        const targetTabId = e.target.value;
+        if (!targetTabId) return;
+        await moveNote(note.id, targetTabId);
+        e.target.value = "";
+      });
       list.appendChild(el);
     });
+  }
+
+  async function moveNote(noteId, targetTabId) {
+    const note = notesItems.find(n => n.id === noteId);
+    if (!note) return;
+    const targetTab = TABS.find(t => t.id === targetTabId);
+    if (!targetTab) return;
+    try {
+      const newCat = targetTab.isNotes ? "notes" : targetTab.claudeCat;
+      await updateDoc(doc(db, "brain_items", noteId), { category: newCat });
+      notesItems = notesItems.filter(n => n.id !== noteId);
+      // Ajouter dans les données locales de l'onglet cible si déjà chargé
+      if (genericData[targetTabId]?.loaded) {
+        genericData[targetTabId].items.unshift({ ...note, category: newCat });
+        renderGeneric(targetTabId);
+      }
+      renderNotes();
+      showToast(`Déplacé vers ${targetTab.icon} ${targetTab.label}`, "success");
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
   }
 
   async function saveNewNote(title, content, source = "manual", imageThumb = null) {
@@ -1203,6 +1257,74 @@
       showToast("Note supprimée");
     } catch (e) { showToast("Erreur : " + e.message, "error"); }
   };
+
+  // ── ENEX IMPORT ─────────────────────────────────────────────────────
+  $("enexInput").addEventListener("change", async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = "";
+    const text = await file.text();
+    let xmlDoc;
+    try {
+      xmlDoc = new DOMParser().parseFromString(text, "text/xml");
+    } catch (err) { showToast("Fichier .enex invalide", "error"); return; }
+
+    const noteEls = xmlDoc.querySelectorAll("note");
+    if (!noteEls.length) { showToast("Aucune note trouvée", "error"); return; }
+
+    const total = noteEls.length;
+    $("enexProgress").style.display = "block";
+    $("enexBar").style.width = "0%";
+    $("enexLabel").textContent = `0 / ${total} notes importées…`;
+
+    let imported = 0;
+    const BATCH = 5; // traitement par lots pour éviter les timeouts
+
+    for (const noteEl of noteEls) {
+      const title   = noteEl.querySelector("title")?.textContent?.trim() || "Note sans titre";
+      const created = noteEl.querySelector("created")?.textContent?.trim();
+      // Extraire le texte depuis l'ENML (XML interne)
+      const rawContent = noteEl.querySelector("content")?.textContent || "";
+      let content = "";
+      try {
+        const enml = new DOMParser().parseFromString(rawContent, "text/html");
+        content = enml.body?.innerText || enml.body?.textContent || rawContent.replace(/<[^>]+>/g, " ").trim();
+      } catch { content = rawContent.replace(/<[^>]+>/g, " ").trim(); }
+      content = content.replace(/\s{3,}/g, "\n\n").trim();
+
+      // Parser la date Evernote (format: 20230101T120000Z)
+      let createdAt = new Date();
+      if (created) {
+        const m = created.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+        if (m) createdAt = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`);
+      }
+
+      const data = { category: "notes", title, content, done: false, createdAt, source: "evernote" };
+      try {
+        const ref = await addDoc(collection(db, "brain_items"), data);
+        notesItems.push({ id: ref.id, ...data });
+        imported++;
+      } catch (err) { console.error("Import error:", err); }
+
+      // Mise à jour de la barre de progression
+      const pct = Math.round((imported / total) * 100);
+      $("enexBar").style.width = pct + "%";
+      $("enexLabel").textContent = `${imported} / ${total} notes importées…`;
+
+      // Pause tous les BATCH éléments pour éviter de saturer Firestore
+      if (imported % BATCH === 0) await new Promise(r => setTimeout(r, 200));
+    }
+
+    // Trier par date et rafraîchir
+    notesItems.sort((a, b) => {
+      const ta = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+      const tb = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+      return tb - ta;
+    });
+    renderNotes();
+    $("enexProgress").style.display = "none";
+    showToast(`${imported} notes importées depuis Evernote ✓`, "success");
+  });
 
   $("btnNewNote").addEventListener("click", () => {
     $("noteNewForm").classList.toggle("visible");
