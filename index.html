@@ -904,6 +904,16 @@
     <!-- Étape classement : toujours visible -->
     <div class="dl-step" style="margin-top:14px">
       <div class="dl-step-label"><span class="dl-step-num" id="dlClassifyNum">4</span>Classer</div>
+      <input class="dl-input" id="dlGenre" type="text" placeholder="Genre (ex: Deep House, Techno…)" list="knownGenresDl" />
+      <datalist id="knownGenresDl">
+        <option value="House"><option value="Deep House"><option value="Progressive House">
+        <option value="Tech House"><option value="Afro House"><option value="Melodic House">
+        <option value="Techno"><option value="Minimal Techno"><option value="Industrial Techno">
+        <option value="Trance"><option value="Psytrance"><option value="Drum & Bass">
+        <option value="Jungle"><option value="Electro"><option value="Disco"><option value="Funk">
+        <option value="Soul"><option value="R&B"><option value="Hip-Hop"><option value="Pop">
+        <option value="Rock"><option value="Jazz"><option value="Reggae"><option value="Ambient">
+      </datalist>
       <input class="dl-input" id="dlLocalFolder" type="text" placeholder="Dossier local (ex: House/Progressive)" list="knownFoldersDl" />
       <datalist id="knownFoldersDl"></datalist>
       <input class="dl-input" id="dlRekordboxPlaylist" type="text" placeholder="Playlist Rekordbox (ex: House Progressif)" list="knownPlaylistsDl" />
@@ -934,8 +944,8 @@
     <div class="dl-step">
       <div class="dl-step-label">Format du nom de fichier</div>
       <select class="dl-input" id="rbFilePattern">
-        <option value="{titre} - {artiste}">{titre} - {artiste}</option>
         <option value="{artiste} - {titre}">{artiste} - {titre}</option>
+        <option value="{titre} - {artiste}">{titre} - {artiste}</option>
         <option value="{titre}">{titre} (sans artiste)</option>
         <option value="{artiste} - {titre} ({annee})">{artiste} - {titre} (année)</option>
       </select>
@@ -1203,7 +1213,7 @@
         <div class="item-info">
           <div class="item-title"><span class="item-title-text">${esc(item.title)}</span>${item.source === "vision" ? '<span class="tag">IA</span>' : ""}${item.starred ? ' <span style="color:var(--accent);font-size:11px">★</span>' : ""}</div>
           <div class="item-sub">${esc(item.artist || "—")}</div>
-          ${(item.localFolder || item.rekordboxPlaylist) ? `<div class="music-meta-badges">${item.localFolder ? `<span class="music-badge folder">📁 ${esc(item.localFolder)}</span>` : ""}${item.rekordboxPlaylist ? `<span class="music-badge playlist">🎚 ${esc(item.rekordboxPlaylist)}</span>` : ""}</div>` : ""}
+          ${(item.genre || item.localFolder || item.rekordboxPlaylist) ? `<div class="music-meta-badges">${item.genre ? `<span class="music-badge" style="border-color:rgba(150,150,255,.3);color:#aaf">🎵 ${esc(item.genre)}</span>` : ""}${item.localFolder ? `<span class="music-badge folder">📁 ${esc(item.localFolder)}</span>` : ""}${item.rekordboxPlaylist ? `<span class="music-badge playlist">🎚 ${esc(item.rekordboxPlaylist)}</span>` : ""}</div>` : ""}
         </div>
         <div class="item-date">${formatDate(item.createdAt)}</div>
         <div class="item-actions">
@@ -1399,7 +1409,7 @@
   // ── DOWNLOAD WORKFLOW (YouTube → notube.lol → Rekordbox) ─────────────
   // ── REKORDBOX SETTINGS (localStorage) ───────────────────────────────
   const RB_DEFAULTS = {
-    basePath: "C:/Users/Olivier/Music",
+    basePath: "C:/Users/Olivier/Musique",
     filePattern: "{artiste} - {titre}",
     extension: "mp3"
   };
@@ -1464,6 +1474,7 @@
     const q = encodeURIComponent(((item.title || "") + " " + (item.artist || "") + " extended version").trim());
     $("btnOpenYT").href = `https://www.youtube.com/results?search_query=${q}`;
     $("dlYoutubeUrl").value        = item.youtubeUrl || "";
+    $("dlGenre").value             = item.genre || "";
     $("dlLocalFolder").value       = item.localFolder || "";
     $("dlRekordboxPlaylist").value = item.rekordboxPlaylist || "";
     // Autocomplete dossiers/playlists connus
@@ -1498,12 +1509,14 @@
     if (!dlModalItemId) return;
     const alreadyDone       = $("btnSaveDownload").dataset.alreadyDone === "1";
     const youtubeUrl        = $("dlYoutubeUrl").value.trim();
+    const genre             = $("dlGenre").value.trim();
     const localFolder       = $("dlLocalFolder").value.trim();
     const rekordboxPlaylist = $("dlRekordboxPlaylist").value.trim();
     try {
       const updates = {};
       if (!alreadyDone) updates.downloaded = true;  // ne re-setter que si nécessaire
       if (youtubeUrl)        updates.youtubeUrl        = youtubeUrl;
+      if (genre)             updates.genre             = genre;
       if (localFolder)       updates.localFolder       = localFolder;
       if (rekordboxPlaylist) updates.rekordboxPlaylist = rekordboxPlaylist;
       await updateDoc(doc(db, "music_downloads", dlModalItemId), updates);
@@ -1538,7 +1551,7 @@
       const fullDir  = folder ? `${basePath}/${folder}` : basePath;
       const filename = buildFilename(item, s);
       const loc = `file://localhost/${fullDir}/${filename}`.replace(/ /g, "%20");
-      return `    <TRACK TrackID="${id}" Name="${escXml(item.title)}" Artist="${escXml(item.artist || "")}" TotalTime="0" Location="${loc}" />`;
+      return `    <TRACK TrackID="${id}" Name="${escXml(item.title)}" Artist="${escXml(item.artist || "")}" Genre="${escXml(item.genre || "")}" TotalTime="0" Location="${loc}" />`;
     });
     const byPl = {};
     downloaded.forEach(item => {
