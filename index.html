@@ -499,6 +499,38 @@
   }
   .note-content.expanded { display: block; }
   .note-preview { font-size: 11px; color: var(--text3); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── DOSSIERS NOTES ── */
+  .folder-bar {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .folder-bar::-webkit-scrollbar { display: none; }
+  .folder-chip {
+    flex-shrink: 0; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    background: var(--bg2); border: 0.5px solid var(--border); color: var(--text3);
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .folder-chip:hover { border-color: var(--border2); color: var(--text); }
+  .folder-chip.active { background: var(--accent); border-color: var(--accent); color: #000; }
+  .folder-chip-new {
+    background: transparent; border-style: dashed; border-color: var(--border2);
+    color: var(--text3); font-size: 14px; padding: 4px 10px;
+  }
+  .folder-chip-new:hover { border-color: var(--accent); color: var(--accent); }
+  .note-folder-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; color: var(--accent); background: rgba(245,166,35,.12);
+    border: 0.5px solid rgba(245,166,35,.3); border-radius: 10px;
+    padding: 1px 7px; margin-left: auto; white-space: nowrap; flex-shrink: 0;
+  }
+  .folder-select-small {
+    background: var(--bg3); border: 0.5px solid var(--border); color: var(--text3);
+    border-radius: 6px; font-size: 10px; padding: 3px 4px; cursor: pointer;
+    outline: none; max-width: 110px;
+  }
+  .folder-select-small:focus { border-color: var(--accent); }
+
   .note-new-form {
     background: var(--bg2); border: 0.5px solid var(--border);
     border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; display: none;
@@ -688,6 +720,9 @@
         <button class="btn btn-ghost" id="btnCancelNote">Annuler</button>
       </div>
     </div>
+    <div id="notes-folder-bar" style="display:none">
+      <div class="folder-bar" id="folderBarInner"></div>
+    </div>
     <div class="item-list" id="list-notes">
       <div class="empty-state" id="empty-notes">
         <div class="empty-icon">📝</div>
@@ -757,7 +792,7 @@
     { id: "activite",  label: "Activités", icon: "🏃", col: "brain_items",     doneLabel: "Fait",       subHint: "Lieu", claudeCat: "activite" },
     { id: "cadeaux",   label: "Cadeaux",   icon: "🎁", col: "brain_items",     doneLabel: "Offert",     subHint: "Pour qui", claudeCat: "cadeaux" },
     { id: "travail",   label: "Travail",   icon: "💼", col: "brain_items",     doneLabel: "Fait",       subHint: "Projet", claudeCat: "travail" },
-    { id: "blagues",   label: "Blagues",   icon: "😂", col: "brain_items",     doneLabel: "Partagée",   subHint: "Contexte", claudeCat: "blagues" },
+    { id: "blagues",   label: "Humour",    icon: "😂", col: "brain_items",     doneLabel: "Partagée",   subHint: "Contexte", claudeCat: "blagues" },
     { id: "pensees",   label: "Pensées",   icon: "💭", col: "brain_items",     doneLabel: "Notée",      subHint: "Thème", claudeCat: "pensees" },
     { id: "notes",     label: "Notes",     icon: "📝", col: "brain_items",     doneLabel: "Archivé",    subHint: "Contenu", claudeCat: "notes", isNotes: true },
   ];
@@ -782,6 +817,7 @@
   let modalItemRef    = null; // { id, col, tabId }
   let notesItems      = [];
   let notesLoaded     = false;
+  let currentNotesFolder = null; // null = tous les dossiers
 
   const $ = id => document.getElementById(id);
 
@@ -1147,19 +1183,94 @@
     } catch (e) { showToast("Erreur Firebase : " + e.message, "error"); }
   }
 
+  // ── DOSSIERS NOTES ─────────────────────────────────────────────────
+  function getFolders() {
+    return [...new Set(notesItems.map(n => n.folder).filter(Boolean))].sort();
+  }
+
+  function renderFolderBar() {
+    const folders = getFolders();
+    const bar = $("folderBarInner");
+    const wrap = $("notes-folder-bar");
+    bar.innerHTML = "";
+    wrap.style.display = folders.length > 0 ? "block" : "none";
+    // Chip "Tous"
+    const all = document.createElement("button");
+    all.className = "folder-chip" + (currentNotesFolder === null ? " active" : "");
+    all.textContent = "📁 Tous";
+    all.onclick = () => { currentNotesFolder = null; renderFolderBar(); renderNotes(); };
+    bar.appendChild(all);
+    // Un chip par dossier
+    folders.forEach(f => {
+      const chip = document.createElement("button");
+      chip.className = "folder-chip" + (currentNotesFolder === f ? " active" : "");
+      chip.textContent = f;
+      chip.onclick = () => { currentNotesFolder = f; renderFolderBar(); renderNotes(); };
+      bar.appendChild(chip);
+    });
+    // Bouton "nouveau dossier"
+    const btnNew = document.createElement("button");
+    btnNew.className = "folder-chip folder-chip-new";
+    btnNew.title = "Créer un dossier";
+    btnNew.textContent = "＋";
+    btnNew.onclick = () => promptNewFolder();
+    bar.appendChild(btnNew);
+  }
+
+  function promptNewFolder() {
+    const name = prompt("Nom du nouveau dossier :");
+    if (!name?.trim()) return;
+    // Le dossier sera visible dès qu'une note lui sera assignée
+    // On sélectionne immédiatement ce dossier dans le filtre pour guider l'utilisateur
+    currentNotesFolder = name.trim();
+    renderFolderBar();
+    renderNotes();
+    showToast(`Dossier « ${name.trim()} » créé — assigne des notes ci-dessous`, "success");
+  }
+
+  async function assignNoteToFolder(noteId, folderName) {
+    // folderName === "" → retire du dossier
+    try {
+      await updateDoc(doc(db, "brain_items", noteId), { folder: folderName || null });
+      const note = notesItems.find(n => n.id === noteId);
+      if (note) note.folder = folderName || null;
+      renderFolderBar();
+      renderNotes();
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  }
+
   function renderNotes() {
     const list  = $("list-notes");
     const empty = $("empty-notes");
     list.querySelectorAll(".note-card").forEach(el => el.remove());
-    empty.style.display = notesItems.length === 0 ? "block" : "none";
-    notesItems.forEach(note => {
+
+    // Filtrer par dossier actif
+    const visible = currentNotesFolder === null
+      ? notesItems
+      : notesItems.filter(n => n.folder === currentNotesFolder);
+
+    empty.style.display = visible.length === 0 ? "block" : "none";
+    renderFolderBar();
+
+    const folders = getFolders();
+    visible.forEach(note => {
       const el = document.createElement("div");
       el.className = "note-card" + (note.done ? " archived" : "");
       el.dataset.id = note.id;
       const preview = (note.content || "").slice(0, 80).replace(/\n/g, " ");
+
+      // Options du select de dossier
+      const folderOpts = [
+        `<option value="">📁 Dossier…</option>`,
+        `<option value="" ${!note.folder ? 'selected' : ''}>— Sans dossier</option>`,
+        ...folders.map(f => `<option value="${f}" ${note.folder === f ? 'selected' : ''}>${f}</option>`),
+        `<option value="__new__">➕ Nouveau…</option>`
+      ].join("");
+
       el.innerHTML = `
         <div class="note-card-header">
           <div class="note-card-title">${esc(note.title || "Sans titre")}</div>
+          ${note.folder ? `<span class="note-folder-badge">📁 ${esc(note.folder)}</span>` : ""}
           <div class="note-date">${formatDate(note.createdAt)}</div>
           <div class="note-actions">
             ${note.imageThumb ? `<button class="img-thumb-btn" title="Voir la capture" onclick="viewImage('${note.id}','brain_items','notes')">📷</button>` : ""}
@@ -1173,6 +1284,9 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
+          <select class="folder-select-small" data-note-id="${note.id}" title="Classer dans un dossier">
+            ${folderOpts}
+          </select>
           <select class="move-select" data-note-id="${note.id}" title="Déplacer vers un onglet">
             <option value="">→ Déplacer vers…</option>
             ${TABS.filter(t => t.id !== "scan" && t.id !== "notes").map(t =>
@@ -1181,6 +1295,7 @@
         </div>
         ${preview ? `<div class="note-preview">${esc(preview)}${note.content?.length > 80 ? "…" : ""}</div>` : ""}
         <div class="note-content" id="note-content-${note.id}">${esc(note.content || "")}</div>`;
+
       el.querySelector(".note-card-header").addEventListener("click", e => {
         if (e.target.closest("button") || e.target.closest("select")) return;
         const contentEl = $(`note-content-${note.id}`);
@@ -1188,12 +1303,27 @@
         el.querySelector(".note-preview") && (el.querySelector(".note-preview").style.display =
           contentEl.classList.contains("expanded") ? "none" : "");
       });
+
+      // Select dossier
+      el.querySelector(".folder-select-small").addEventListener("change", async e => {
+        const val = e.target.value;
+        if (val === "__new__") {
+          const name = prompt("Nom du nouveau dossier :");
+          if (!name?.trim()) { e.target.value = note.folder || ""; return; }
+          await assignNoteToFolder(note.id, name.trim());
+        } else {
+          await assignNoteToFolder(note.id, val);
+        }
+      });
+
+      // Select déplacer vers onglet
       el.querySelector(".move-select").addEventListener("change", async e => {
         const targetTabId = e.target.value;
         if (!targetTabId) return;
         await moveNote(note.id, targetTabId);
         e.target.value = "";
       });
+
       list.appendChild(el);
     });
   }
@@ -1529,7 +1659,7 @@ Catégories possibles :
 - activite : sport, loisir, sortie, événement, activité physique
 - cadeaux : idée cadeau, liste de souhaits, produit à offrir
 - travail : tâche pro, projet, réunion, idée business
-- blagues : blague, humour, mème, citation drôle
+- blagues : blague, humour, mème, gif drôle, citation humoristique
 - pensees : pensée, citation inspirante, réflexion personnelle, philosophie
 - notes : texte manuscrit, capture d'idée, note, mémo, whiteboard, tout contenu à mémoriser
 
