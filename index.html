@@ -1959,11 +1959,35 @@ Règles :
       .catch(e => console.warn("SW registration failed:", e));
   }
 
+  // ── MIGRATION : notes orphelines avec category="music" → music_downloads ──
+  async function migrateOrphanMusicNotes() {
+    try {
+      const q = query(collection(db, "brain_items"), where("category", "==", "music"));
+      const snap = await getDocs(q);
+      if (snap.empty) return;
+      for (const d of snap.docs) {
+        const data = d.data();
+        const musicData = {
+          title: data.title || "Sans titre",
+          artist: data.artist || "",
+          downloaded: data.downloaded || false,
+          createdAt: data.createdAt || new Date(),
+          source: data.source || "notes",
+          ...(data.imageThumb ? { imageThumb: data.imageThumb } : {})
+        };
+        await addDoc(collection(db, "music_downloads"), musicData);
+        await deleteDoc(doc(db, "brain_items", d.id));
+      }
+      console.log(`Migration : ${snap.size} note(s) musique récupérée(s)`);
+    } catch (e) { console.warn("Migration music orphans:", e); }
+  }
+
   // ── INIT ────────────────────────────────────────────────────────────
   buildNav();
   buildGenericPanels();
   await loadApiKey();
   await checkSharedImages();
+  await migrateOrphanMusicNotes();
   loadMusic();
 </script>
 </body>
