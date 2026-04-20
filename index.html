@@ -555,6 +555,60 @@
     box-shadow: 0 0 8px rgba(232,201,122,0.2);
   }
 
+  /* ── BOUTON RECHERCHE HEADER ── */
+  .btn-search {
+    width: 32px; height: 32px; border-radius: 8px; border: 0.5px solid var(--border);
+    background: var(--bg2); color: var(--text3); display: flex; align-items: center;
+    justify-content: center; cursor: pointer; flex-shrink: 0; transition: all .15s;
+  }
+  .btn-search:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── OVERLAY RECHERCHE GLOBALE ── */
+  .search-overlay {
+    position: fixed; inset: 0; background: var(--bg); z-index: 200;
+    display: none; flex-direction: column; padding: 16px;
+    animation: fadeIn .15s ease;
+  }
+  .search-overlay.open { display: flex; }
+  .search-header { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .search-input {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-size: 15px; outline: none; font-family: var(--font);
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-results { flex: 1; overflow-y: auto; }
+  .search-group-label {
+    font-size: 10px; color: var(--text3); text-transform: uppercase;
+    letter-spacing: 1px; padding: 12px 0 4px; font-weight: 600;
+  }
+  .search-result-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 0.5px solid var(--border); cursor: pointer;
+  }
+  .search-result-item:hover .search-result-title { color: var(--accent); }
+  .search-result-title { font-size: 13px; font-weight: 500; }
+  .search-result-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .search-empty { color: var(--text3); text-align: center; padding: 40px 0; font-size: 14px; }
+
+  /* ── FAVORIS ── */
+  .star-btn {
+    width: 26px; height: 26px; border-radius: 6px; border: none;
+    background: transparent; cursor: pointer; font-size: 14px; line-height: 1;
+    color: var(--text3); opacity: 0.5; transition: all .15s; flex-shrink: 0;
+  }
+  .star-btn.starred { color: var(--accent); opacity: 1; }
+  .star-btn:hover { opacity: 1; }
+
+  /* ── BOUTON YOUTUBE ── */
+  .yt-btn {
+    width: 26px; height: 26px; border-radius: 6px; border: 0.5px solid var(--border);
+    background: transparent; display: flex; align-items: center; justify-content: center;
+    color: var(--text3); cursor: pointer; font-size: 11px; text-decoration: none;
+    transition: all .15s; flex-shrink: 0;
+  }
+  .yt-btn:hover { border-color: #ff0000; color: #ff0000; }
+
   /* ── IMAGE THUMB BUTTON ── */
   .img-thumb-btn {
     width: 28px; height: 28px; border-radius: 6px;
@@ -606,6 +660,17 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- RECHERCHE GLOBALE OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-header">
+    <input class="search-input" id="searchInput" type="search" placeholder="Rechercher dans Second Brain…" autocomplete="off" />
+    <button class="btn btn-ghost" id="btnCloseSearch" style="white-space:nowrap;padding:8px 14px">✕ Fermer</button>
+  </div>
+  <div class="search-results" id="searchResults">
+    <div class="search-empty">Tape quelque chose pour chercher dans tous tes onglets…</div>
+  </div>
+</div>
+
 <div class="app">
 
   <header>
@@ -613,6 +678,9 @@
       <img src="icon.png" alt="Second Brain" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
     </div>
     <h1>Second Brain</h1>
+    <button class="btn-search" id="btnOpenSearch" title="Recherche globale">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
     <div class="api-mini">
       <input type="password" id="apiKey" placeholder="sk-ant-…" title="Clé API Anthropic" />
       <button class="btn-icon-sm" id="btnSaveKey" title="Sauvegarder la clé">
@@ -961,7 +1029,9 @@
   function renderMusic() {
     const list  = $("list-music");
     const empty = $("empty-music");
-    const filtered = musicItems.filter(t => {
+    // Favoris en premier, puis tri par date (ordre naturel du tableau)
+    const sorted = [...musicItems].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
+    const filtered = sorted.filter(t => {
       if (musicFilter === "pending") return !t.downloaded;
       if (musicFilter === "done")    return  t.downloaded;
       return true;
@@ -973,14 +1043,19 @@
       el.className = "item-row" + (item.downloaded ? " done-item" : "");
       el.dataset.id  = item.id;
       el.dataset.col = "music_downloads";
+      const ytQuery = encodeURIComponent(((item.title || "") + " " + (item.artist || "") + " extended").trim());
       el.innerHTML = `
         <div class="item-num">${i + 1}</div>
         <div class="item-info">
-          <div class="item-title"><span class="item-title-text">${esc(item.title)}</span>${item.source === "vision" ? '<span class="tag">IA</span>' : ""}</div>
+          <div class="item-title"><span class="item-title-text">${esc(item.title)}</span>${item.source === "vision" ? '<span class="tag">IA</span>' : ""}${item.starred ? ' <span style="color:var(--accent);font-size:11px">★</span>' : ""}</div>
           <div class="item-sub">${esc(item.artist || "—")}</div>
         </div>
         <div class="item-date">${formatDate(item.createdAt)}</div>
         <div class="item-actions">
+          <button class="star-btn ${item.starred ? "starred" : ""}" title="${item.starred ? "Retirer des favoris" : "Favori"}" onclick="toggleStar('${item.id}','music_downloads','music')">★</button>
+          <a class="yt-btn" href="https://www.youtube.com/results?search_query=${ytQuery}" target="_blank" rel="noopener" title="Rechercher sur YouTube">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M10 15l5.19-3L10 9v6zm11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
+          </a>
           <button class="icon-btn edit-btn" title="Modifier" onclick="editItem('${item.id}','music_downloads')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
@@ -1047,7 +1122,8 @@
     const empty = $(`empty-${tabId}`);
     if (!data) return;
     const filter = data.filter || "all";
-    const filtered = data.items.filter(item => {
+    const sorted = [...data.items].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
+    const filtered = sorted.filter(item => {
       if (filter === "pending") return !item.done;
       if (filter === "done")    return  item.done;
       return true;
@@ -1061,11 +1137,12 @@
       el.innerHTML = `
         <div class="item-num">${i + 1}</div>
         <div class="item-info">
-          <div class="item-title"><span class="item-title-text">${esc(item.title)}</span>${item.source === "vision" ? '<span class="tag">IA</span>' : ""}</div>
+          <div class="item-title"><span class="item-title-text">${esc(item.title)}</span>${item.source === "vision" ? '<span class="tag">IA</span>' : ""}${item.starred ? ' <span style="color:var(--accent);font-size:11px">★</span>' : ""}</div>
           <div class="item-sub">${esc(item.subtitle || "")}</div>
         </div>
         <div class="item-date">${formatDate(item.createdAt)}</div>
         <div class="item-actions">
+          <button class="star-btn ${item.starred ? "starred" : ""}" title="${item.starred ? "Retirer des favoris" : "Favori"}" onclick="toggleStar('${item.id}','brain_items','${tabId}')">★</button>
           <button class="icon-btn edit-btn" title="Modifier" onclick="editItem('${item.id}','brain_items','${tabId}')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
@@ -1166,6 +1243,100 @@
     } catch (e) { showToast("Erreur : " + e.message, "error"); }
   };
 
+  // ── FAVORIS ─────────────────────────────────────────────────────────
+  window.toggleStar = async (id, col, tabId) => {
+    let item;
+    if (col === "music_downloads") item = musicItems.find(i => i.id === id);
+    else if (tabId === "notes")    item = notesItems.find(i => i.id === id);
+    else                           item = genericData[tabId]?.items.find(i => i.id === id);
+    if (!item) return;
+    try {
+      await updateDoc(doc(db, col, id), { starred: !item.starred });
+      item.starred = !item.starred;
+      if (col === "music_downloads") { updateMusicStats(); renderMusic(); }
+      else if (tabId === "notes")    renderNotes();
+      else                           renderGeneric(tabId);
+    } catch (e) { showToast("Erreur : " + e.message, "error"); }
+  };
+
+  // ── RECHERCHE GLOBALE ────────────────────────────────────────────────
+  let searchDebounce = null;
+
+  async function openSearch() {
+    $("searchOverlay").classList.add("open");
+    $("searchInput").value = "";
+    $("searchResults").innerHTML = `<div class="search-empty">Tape quelque chose pour chercher dans tous tes onglets…</div>`;
+    setTimeout(() => $("searchInput").focus(), 50);
+    // Pré-charger tous les onglets non encore chargés
+    const loads = [];
+    if (!notesLoaded) loads.push(loadNotes());
+    for (const tab of TABS) {
+      if (tab.id === "scan" || tab.id === "notes" || tab.id === "music") continue;
+      if (!genericData[tab.id]?.loaded) loads.push(loadGeneric(tab.id));
+    }
+    if (loads.length) await Promise.all(loads);
+  }
+
+  function closeSearch() {
+    $("searchOverlay").classList.remove("open");
+    $("searchInput").value = "";
+    $("searchResults").innerHTML = "";
+  }
+
+  function runSearch(q) {
+    const results = $("searchResults");
+    results.innerHTML = "";
+    const lq = q.trim().toLowerCase();
+    if (!lq) {
+      results.innerHTML = `<div class="search-empty">Tape quelque chose pour chercher dans tous tes onglets…</div>`;
+      return;
+    }
+    const groups = [];
+    // Musique
+    const mHits = musicItems.filter(i =>
+      i.title?.toLowerCase().includes(lq) || i.artist?.toLowerCase().includes(lq));
+    if (mHits.length) groups.push({ tab: TABS.find(t => t.id === "music"), hits: mHits });
+    // Notes
+    const nHits = notesItems.filter(i =>
+      i.title?.toLowerCase().includes(lq) || i.content?.toLowerCase().includes(lq));
+    if (nHits.length) groups.push({ tab: TABS.find(t => t.id === "notes"), hits: nHits });
+    // Génériques
+    for (const tab of TABS) {
+      if (tab.id === "scan" || tab.id === "notes" || tab.id === "music") continue;
+      const hits = (genericData[tab.id]?.items || []).filter(i =>
+        i.title?.toLowerCase().includes(lq) || i.subtitle?.toLowerCase().includes(lq));
+      if (hits.length) groups.push({ tab, hits });
+    }
+    if (!groups.length) {
+      results.innerHTML = `<div class="search-empty">Aucun résultat pour « ${esc(q)} »</div>`;
+      return;
+    }
+    groups.forEach(({ tab, hits }) => {
+      const label = document.createElement("div");
+      label.className = "search-group-label";
+      label.textContent = `${tab.icon} ${tab.label}  ·  ${hits.length} résultat${hits.length > 1 ? "s" : ""}`;
+      results.appendChild(label);
+      hits.slice(0, 8).forEach(item => {
+        const row = document.createElement("div");
+        row.className = "search-result-item";
+        const sub = item.artist || item.subtitle || (item.content || "").slice(0, 60);
+        row.innerHTML = `
+          <div>
+            <div class="search-result-title">${esc(item.title || "Sans titre")}${item.starred ? " ★" : ""}</div>
+            ${sub ? `<div class="search-result-sub">${esc(sub)}</div>` : ""}
+          </div>`;
+        row.onclick = () => { closeSearch(); switchTab(tab.id); };
+        results.appendChild(row);
+      });
+      if (hits.length > 8) {
+        const more = document.createElement("div");
+        more.style.cssText = "font-size:11px;color:var(--text3);padding:4px 0 8px";
+        more.textContent = `+ ${hits.length - 8} autres résultats dans cet onglet`;
+        results.appendChild(more);
+      }
+    });
+  }
+
   // ── NOTES CRUD ──────────────────────────────────────────────────────
   async function loadNotes() {
     try {
@@ -1244,10 +1415,11 @@
     const empty = $("empty-notes");
     list.querySelectorAll(".note-card").forEach(el => el.remove());
 
-    // Filtrer par dossier actif
-    const visible = currentNotesFolder === null
+    // Filtrer par dossier actif + favoris en premier
+    const base = currentNotesFolder === null
       ? notesItems
       : notesItems.filter(n => n.folder === currentNotesFolder);
+    const visible = [...base].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
 
     empty.style.display = visible.length === 0 ? "block" : "none";
     renderFolderBar();
@@ -1273,6 +1445,7 @@
           ${note.folder ? `<span class="note-folder-badge">📁 ${esc(note.folder)}</span>` : ""}
           <div class="note-date">${formatDate(note.createdAt)}</div>
           <div class="note-actions">
+            <button class="star-btn ${note.starred ? "starred" : ""}" title="${note.starred ? "Retirer des favoris" : "Favori"}" onclick="toggleStar('${note.id}','brain_items','notes')">★</button>
             ${note.imageThumb ? `<button class="img-thumb-btn" title="Voir la capture" onclick="viewImage('${note.id}','brain_items','notes')">📷</button>` : ""}
             <button class="icon-btn edit-btn" title="Modifier" onclick="editNote('${note.id}')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1989,6 +2162,15 @@ Règles :
   await checkSharedImages();
   await migrateOrphanMusicNotes();
   loadMusic();
+
+  // Recherche globale
+  $("btnOpenSearch").onclick = () => openSearch();
+  $("btnCloseSearch").onclick = () => closeSearch();
+  $("searchInput").addEventListener("input", e => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => runSearch(e.target.value), 220);
+  });
+  $("searchOverlay").addEventListener("keydown", e => { if (e.key === "Escape") closeSearch(); });
 </script>
 </body>
 </html>
