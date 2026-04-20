@@ -1204,13 +1204,32 @@
     const targetTab = TABS.find(t => t.id === targetTabId);
     if (!targetTab) return;
     try {
-      const newCat = targetTab.isNotes ? "notes" : targetTab.claudeCat;
-      await updateDoc(doc(db, "brain_items", noteId), { category: newCat });
-      notesItems = notesItems.filter(n => n.id !== noteId);
-      // Ajouter dans les données locales de l'onglet cible si déjà chargé
-      if (genericData[targetTabId]?.loaded) {
-        genericData[targetTabId].items.unshift({ ...note, category: newCat });
-        renderGeneric(targetTabId);
+      if (targetTabId === "music") {
+        // Musique utilise une collection séparée : music_downloads
+        const musicData = {
+          title: note.title || "Sans titre",
+          artist: "",
+          downloaded: false,
+          createdAt: note.createdAt || new Date(),
+          source: "notes",
+          ...(note.imageThumb ? { imageThumb: note.imageThumb } : {})
+        };
+        const ref = await addDoc(collection(db, "music_downloads"), musicData);
+        await deleteDoc(doc(db, "brain_items", noteId));
+        notesItems = notesItems.filter(n => n.id !== noteId);
+        // Mettre à jour musicItems en mémoire et re-rendre
+        musicItems.unshift({ id: ref.id, ...musicData });
+        updateMusicStats();
+        renderMusic();
+      } else {
+        const newCat = targetTab.isNotes ? "notes" : targetTab.claudeCat;
+        await updateDoc(doc(db, "brain_items", noteId), { category: newCat });
+        notesItems = notesItems.filter(n => n.id !== noteId);
+        // Ajouter dans les données locales de l'onglet cible si déjà chargé
+        if (genericData[targetTabId]?.loaded) {
+          genericData[targetTabId].items.unshift({ ...note, category: newCat });
+          renderGeneric(targetTabId);
+        }
       }
       renderNotes();
       showToast(`Déplacé vers ${targetTab.icon} ${targetTab.label}`, "success");
