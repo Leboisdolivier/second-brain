@@ -657,6 +657,20 @@
   .dl-input:focus { border-color: var(--accent); }
   .dl-input + .dl-input { margin-top: 7px; }
   .dl-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .dl-steps-summary {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+    color: var(--text2); cursor: pointer; list-style: none; padding: 8px 0;
+    border-top: 0.5px solid var(--border); display: flex; align-items: center; gap: 6px;
+  }
+  .dl-steps-summary::after { content: "▾"; margin-left: auto; }
+  details[open] .dl-steps-summary::after { content: "▴"; }
+  .dl-steps-summary::-webkit-details-marker { display: none; }
+  .btn-rb-settings {
+    padding: 5px 9px; border-radius: 6px; border: 0.5px solid var(--border);
+    background: var(--bg2); color: var(--text3); cursor: pointer; font-size: 12px;
+    transition: all .15s;
+  }
+  .btn-rb-settings:hover { border-color: var(--accent); color: var(--accent); }
 
   /* ── IMAGE THUMB BUTTON ── */
   .img-thumb-btn {
@@ -801,6 +815,7 @@
       <button class="filter-btn" data-filter="pending">À télécharger</button>
       <button class="filter-btn" data-filter="done">Téléchargés</button>
       <button class="filter-btn" id="btnExportRekordbox" title="Exporter les morceaux téléchargés pour Rekordbox" style="margin-left:auto;color:var(--accent)">⬇ Rekordbox XML</button>
+      <button class="btn-rb-settings" id="btnOpenRbSettings" title="Paramètres export Rekordbox">⚙</button>
     </div>
     <div class="item-list" id="list-music">
       <div class="empty-state" id="empty-music">
@@ -862,28 +877,33 @@
     <div class="dl-track-title" id="dlTrackTitle"></div>
     <div class="dl-track-artist" id="dlTrackArtist"></div>
 
-    <div class="dl-step">
-      <div class="dl-step-label"><span class="dl-step-num">1</span>Trouver sur YouTube</div>
-      <a class="btn btn-ghost" id="btnOpenYT" href="#" target="_blank" rel="noopener" style="width:100%;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px"><path d="M10 15l5.19-3L10 9v6zm11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
-        Ouvrir YouTube (extended version)
-      </a>
-    </div>
+    <!-- Étapes 1-3 : collapsibles si déjà téléchargé -->
+    <details id="dlStepsDownload" open>
+      <summary class="dl-steps-summary" id="dlStepsSummary">Télécharger</summary>
+      <div style="padding-top:10px">
+        <div class="dl-step">
+          <div class="dl-step-label"><span class="dl-step-num">1</span>Trouver sur YouTube</div>
+          <a class="btn btn-ghost" id="btnOpenYT" href="#" target="_blank" rel="noopener" style="width:100%;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px"><path d="M10 15l5.19-3L10 9v6zm11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
+            Ouvrir YouTube (extended version)
+          </a>
+        </div>
+        <div class="dl-step">
+          <div class="dl-step-label"><span class="dl-step-num">2</span>URL YouTube</div>
+          <input class="dl-input" id="dlYoutubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=…" />
+        </div>
+        <div class="dl-step">
+          <div class="dl-step-label"><span class="dl-step-num">3</span>Télécharger via notube.lol</div>
+          <button class="btn btn-ghost" id="btnDownloadNotube" style="width:100%;justify-content:center">
+            ⬇ Copier l'URL + ouvrir notube.lol
+          </button>
+        </div>
+      </div>
+    </details>
 
-    <div class="dl-step">
-      <div class="dl-step-label"><span class="dl-step-num">2</span>URL YouTube du morceau</div>
-      <input class="dl-input" id="dlYoutubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=…" />
-    </div>
-
-    <div class="dl-step">
-      <div class="dl-step-label"><span class="dl-step-num">3</span>Télécharger via notube.lol</div>
-      <button class="btn btn-ghost" id="btnDownloadNotube" style="width:100%;justify-content:center">
-        ⬇ Copier l'URL + ouvrir notube.lol
-      </button>
-    </div>
-
-    <div class="dl-step">
-      <div class="dl-step-label"><span class="dl-step-num">4</span>Classer</div>
+    <!-- Étape classement : toujours visible -->
+    <div class="dl-step" style="margin-top:14px">
+      <div class="dl-step-label"><span class="dl-step-num" id="dlClassifyNum">4</span>Classer</div>
       <input class="dl-input" id="dlLocalFolder" type="text" placeholder="Dossier local (ex: House/Progressive)" list="knownFoldersDl" />
       <datalist id="knownFoldersDl"></datalist>
       <input class="dl-input" id="dlRekordboxPlaylist" type="text" placeholder="Playlist Rekordbox (ex: House Progressif)" list="knownPlaylistsDl" />
@@ -893,6 +913,48 @@
     <div class="dl-actions">
       <button class="btn btn-success" id="btnSaveDownload" style="flex:1">✓ Téléchargé — sauvegarder</button>
       <button class="btn btn-ghost" id="btnCloseDlModal">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- REKORDBOX SETTINGS MODAL -->
+<div class="dl-modal" id="rbSettingsModal">
+  <div class="dl-modal-bg" id="rbSettingsBg"></div>
+  <div class="dl-modal-inner">
+    <div class="dl-modal-handle"></div>
+    <div class="dl-track-title">⚙ Paramètres Rekordbox XML</div>
+    <div class="dl-track-artist" style="margin-bottom:18px">Appliqués à chaque export</div>
+
+    <div class="dl-step">
+      <div class="dl-step-label">Chemin de base</div>
+      <input class="dl-input" id="rbBasePath" type="text" placeholder="C:/Music/DJ" />
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Racine de ta bibliothèque (sera préfixée devant le dossier local)</div>
+    </div>
+
+    <div class="dl-step">
+      <div class="dl-step-label">Format du nom de fichier</div>
+      <select class="dl-input" id="rbFilePattern">
+        <option value="{titre} - {artiste}">{titre} - {artiste}</option>
+        <option value="{artiste} - {titre}">{artiste} - {titre}</option>
+        <option value="{titre}">{titre} (sans artiste)</option>
+        <option value="{artiste} - {titre} ({annee})">{artiste} - {titre} (année)</option>
+      </select>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px" id="rbPatternPreview"></div>
+    </div>
+
+    <div class="dl-step">
+      <div class="dl-step-label">Extension</div>
+      <select class="dl-input" id="rbExtension">
+        <option value="mp3">mp3</option>
+        <option value="flac">flac</option>
+        <option value="wav">wav</option>
+        <option value="aiff">aiff</option>
+      </select>
+    </div>
+
+    <div class="dl-actions">
+      <button class="btn btn-success" id="btnSaveRbSettings" style="flex:1">💾 Sauvegarder</button>
+      <button class="btn btn-ghost" id="btnCloseRbSettings">Fermer</button>
     </div>
   </div>
 </div>
@@ -1335,6 +1397,62 @@
   };
 
   // ── DOWNLOAD WORKFLOW (YouTube → notube.lol → Rekordbox) ─────────────
+  // ── REKORDBOX SETTINGS (localStorage) ───────────────────────────────
+  const RB_DEFAULTS = {
+    basePath: "C:/Users/Olivier/Music",
+    filePattern: "{artiste} - {titre}",
+    extension: "mp3"
+  };
+  function loadRbSettings() {
+    try { return { ...RB_DEFAULTS, ...JSON.parse(localStorage.getItem("rbSettings") || "{}") }; }
+    catch { return { ...RB_DEFAULTS }; }
+  }
+  function saveRbSettings(s) { localStorage.setItem("rbSettings", JSON.stringify(s)); }
+
+  function buildFilename(item, settings) {
+    const titre   = item.title  || "Track";
+    const artiste = item.artist || "Inconnu";
+    const annee   = item.createdAt?.toDate?.()?.getFullYear?.() || new Date().getFullYear();
+    return settings.filePattern
+      .replace("{titre}",   titre)
+      .replace("{artiste}", artiste)
+      .replace("{annee}",   annee)
+      + "." + settings.extension;
+  }
+
+  function openRbSettings() {
+    const s = loadRbSettings();
+    $("rbBasePath").value    = s.basePath;
+    $("rbFilePattern").value = s.filePattern;
+    $("rbExtension").value   = s.extension;
+    updateRbPreview();
+    $("rbSettingsModal").classList.add("open");
+  }
+  function updateRbPreview() {
+    const pattern = $("rbFilePattern").value;
+    const ext     = $("rbExtension").value;
+    const preview = pattern
+      .replace("{titre}",   "Around The World")
+      .replace("{artiste}", "Daft Punk")
+      .replace("{annee}",   "1997")
+      + "." + ext;
+    $("rbPatternPreview").textContent = "→ " + preview;
+  }
+  $("rbFilePattern").addEventListener("change", updateRbPreview);
+  $("rbExtension").addEventListener("change",   updateRbPreview);
+  $("btnSaveRbSettings").onclick = () => {
+    saveRbSettings({
+      basePath:    $("rbBasePath").value.trim() || RB_DEFAULTS.basePath,
+      filePattern: $("rbFilePattern").value,
+      extension:   $("rbExtension").value
+    });
+    $("rbSettingsModal").classList.remove("open");
+    showToast("Paramètres Rekordbox sauvegardés", "success");
+  };
+  $("btnCloseRbSettings").onclick = () => $("rbSettingsModal").classList.remove("open");
+  $("rbSettingsBg").onclick        = () => $("rbSettingsModal").classList.remove("open");
+
+  // ── DOWNLOAD WORKFLOW ────────────────────────────────────────────────
   let dlModalItemId = null;
 
   window.openDownloadModal = function(itemId) {
@@ -1345,14 +1463,26 @@
     $("dlTrackArtist").textContent = item.artist || "—";
     const q = encodeURIComponent(((item.title || "") + " " + (item.artist || "") + " extended version").trim());
     $("btnOpenYT").href = `https://www.youtube.com/results?search_query=${q}`;
-    $("dlYoutubeUrl").value          = item.youtubeUrl || "";
-    $("dlLocalFolder").value         = item.localFolder || "";
-    $("dlRekordboxPlaylist").value   = item.rekordboxPlaylist || "";
+    $("dlYoutubeUrl").value        = item.youtubeUrl || "";
+    $("dlLocalFolder").value       = item.localFolder || "";
+    $("dlRekordboxPlaylist").value = item.rekordboxPlaylist || "";
     // Autocomplete dossiers/playlists connus
     const folders   = [...new Set(musicItems.map(i => i.localFolder).filter(Boolean))];
     const playlists = [...new Set(musicItems.map(i => i.rekordboxPlaylist).filter(Boolean))];
     $("knownFoldersDl").innerHTML   = folders.map(f => `<option value="${esc(f)}">`).join("");
     $("knownPlaylistsDl").innerHTML = playlists.map(p => `<option value="${esc(p)}">`).join("");
+    // Adapter l'affichage selon le statut téléchargé
+    const alreadyDone = !!item.downloaded;
+    const details = $("dlStepsDownload");
+    details.open = !alreadyDone; // replié si déjà téléchargé
+    $("dlStepsSummary").textContent = alreadyDone
+      ? "✓ Déjà téléchargé — modifier la source YouTube"
+      : "Télécharger";
+    $("dlClassifyNum").textContent = alreadyDone ? "1" : "4";
+    $("btnSaveDownload").textContent = alreadyDone
+      ? "💾 Mettre à jour le classement"
+      : "✓ Téléchargé — sauvegarder";
+    $("btnSaveDownload").dataset.alreadyDone = alreadyDone ? "1" : "0";
     $("dlModal").classList.add("open");
   };
 
@@ -1366,13 +1496,15 @@
 
   $("btnSaveDownload").onclick = async () => {
     if (!dlModalItemId) return;
-    const youtubeUrl       = $("dlYoutubeUrl").value.trim();
-    const localFolder      = $("dlLocalFolder").value.trim();
+    const alreadyDone       = $("btnSaveDownload").dataset.alreadyDone === "1";
+    const youtubeUrl        = $("dlYoutubeUrl").value.trim();
+    const localFolder       = $("dlLocalFolder").value.trim();
     const rekordboxPlaylist = $("dlRekordboxPlaylist").value.trim();
     try {
-      const updates = { downloaded: true };
-      if (youtubeUrl)       updates.youtubeUrl       = youtubeUrl;
-      if (localFolder)      updates.localFolder      = localFolder;
+      const updates = {};
+      if (!alreadyDone) updates.downloaded = true;  // ne re-setter que si nécessaire
+      if (youtubeUrl)        updates.youtubeUrl        = youtubeUrl;
+      if (localFolder)       updates.localFolder       = localFolder;
       if (rekordboxPlaylist) updates.rekordboxPlaylist = rekordboxPlaylist;
       await updateDoc(doc(db, "music_downloads", dlModalItemId), updates);
       const item = musicItems.find(i => i.id === dlModalItemId);
@@ -1380,7 +1512,7 @@
       updateMusicStats();
       renderMusic();
       $("dlModal").classList.remove("open");
-      showToast("✓ Sauvegardé !", "success");
+      showToast(alreadyDone ? "💾 Classement mis à jour !" : "✓ Sauvegardé !", "success");
     } catch (e) { showToast("Erreur : " + e.message, "error"); }
   };
 
@@ -1395,14 +1527,17 @@
   function exportRekordboxXML() {
     const downloaded = musicItems.filter(i => i.downloaded);
     if (!downloaded.length) { showToast("Aucun morceau téléchargé à exporter", "error"); return; }
+    const s = loadRbSettings();
     let tid = 1;
     const trackMap = {};
     const tracks = downloaded.map(item => {
-      const id  = tid++;
+      const id = tid++;
       trackMap[item.id] = id;
-      const folder   = (item.localFolder || "Musique DJ").replace(/\//g, "/");
-      const filename = `${escXml(item.title || "Track")}${item.artist ? " - " + escXml(item.artist) : ""}.mp3`;
-      const loc = `file://localhost/C:/Music/${folder}/${filename}`.replace(/ /g, "%20");
+      const folder   = (item.localFolder || "").replace(/\\/g, "/").replace(/\/$/, "");
+      const basePath = s.basePath.replace(/\\/g, "/").replace(/\/$/, "");
+      const fullDir  = folder ? `${basePath}/${folder}` : basePath;
+      const filename = buildFilename(item, s);
+      const loc = `file://localhost/${fullDir}/${filename}`.replace(/ /g, "%20");
       return `    <TRACK TrackID="${id}" Name="${escXml(item.title)}" Artist="${escXml(item.artist || "")}" TotalTime="0" Location="${loc}" />`;
     });
     const byPl = {};
@@ -2355,8 +2490,9 @@ Règles :
   });
   $("searchOverlay").addEventListener("keydown", e => { if (e.key === "Escape") closeSearch(); });
 
-  // Export Rekordbox
+  // Export Rekordbox + settings
   $("btnExportRekordbox").onclick = () => exportRekordboxXML();
+  $("btnOpenRbSettings").onclick  = () => openRbSettings();
 </script>
 </body>
 </html>
